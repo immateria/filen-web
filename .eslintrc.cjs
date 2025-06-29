@@ -9,7 +9,7 @@ module.exports = {
 		"plugin:@tanstack/eslint-plugin-query/recommended",
 		"plugin:@tanstack/eslint-plugin-query/recommended"
 	],
-	ignorePatterns: ["dist", ".eslintrc.cjs"],
+       ignorePatterns: ["dist", "public", ".eslintrc.cjs"],
 	parser: "@typescript-eslint/parser",
 	plugins: ["eslint-plugin-react-compiler"],
 	rules: {

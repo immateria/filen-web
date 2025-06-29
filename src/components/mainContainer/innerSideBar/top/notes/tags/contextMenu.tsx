@@ -11,7 +11,7 @@ import { type NoteTag } from "@filen/sdk/dist/types/api/v3/notes"
 import worker from "@/lib/worker"
 import { showConfirmDialog } from "@/components/dialogs/confirm"
 import { showInputDialog } from "@/components/dialogs/input"
-import { type RefetchOptions, type QueryObserverResult } from "@tanstack/react-query"
+import { type RefetchOptions, type QueryObserverResult, useQueryClient } from "@tanstack/react-query"
 import useLoadingToast from "@/hooks/useLoadingToast"
 import useErrorToast from "@/hooks/useErrorToast"
 import { Delete, Heart, Edit } from "lucide-react"
@@ -20,18 +20,19 @@ import eventEmitter from "@/lib/eventEmitter"
 const iconSize = 16
 
 export const ContextMenu = memo(
-	({
-		tag,
-		children,
-		refetch
-	}: {
-		tag: NoteTag
-		children: React.ReactNode
-		refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<NoteTag[], Error>>
-	}) => {
-		const { t } = useTranslation()
-		const loadingToast = useLoadingToast()
-		const errorToast = useErrorToast()
+        ({
+                tag,
+                children,
+                refetch
+        }: {
+                tag: NoteTag
+                children: React.ReactNode
+                refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<NoteTag[], Error>>
+        }) => {
+                const { t } = useTranslation()
+                const queryClient = useQueryClient()
+                const loadingToast = useLoadingToast()
+                const errorToast = useErrorToast()
 
 		const deleteTag = useCallback(async () => {
 			if (
@@ -61,7 +62,7 @@ export const ContextMenu = memo(
 			} finally {
 				toast.dismiss()
 			}
-		}, [tag.uuid, refetch, loadingToast, errorToast, t, tag.name])
+                }, [tag.uuid, refetch, loadingToast, errorToast, t, tag.name])
 
 		const favorite = useCallback(async () => {
 			const toast = loadingToast()
@@ -112,9 +113,17 @@ export const ContextMenu = memo(
 				maxLength: 255
 			})
 
-			if (inputResponse.cancelled || inputResponse.value.trim().length === 0) {
-				return
-			}
+                        if (inputResponse.cancelled || inputResponse.value.trim().length === 0) {
+                                return
+                        }
+
+                        if (
+                                queryClient.getQueryData<NoteTag[]>(["listNotesTags"])
+                                        ?.some(t => t.name.toLowerCase() === inputResponse.value.trim().toLowerCase())
+                        ) {
+                                errorToast(t("notes.tagAlreadyExists"))
+                                return
+                        }
 
 			const toast = loadingToast()
 
@@ -132,7 +141,7 @@ export const ContextMenu = memo(
 			} finally {
 				toast.dismiss()
 			}
-		}, [tag.uuid, refetch, loadingToast, errorToast, t, tag.name])
+                }, [tag.uuid, refetch, loadingToast, errorToast, t, tag.name, queryClient])
 
 		return (
 			<CM>

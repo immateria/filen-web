@@ -1,13 +1,13 @@
 import { type NoteTag, type Note } from "@filen/sdk/dist/types/api/v3/notes"
 
 export function sortAndFilterTags(tags: NoteTag[]) {
-	return tags.sort((a, b) => {
-		if (a.favorite !== b.favorite) {
-			return b.favorite ? 1 : -1
-		}
+        return tags.sort((a, b) => {
+                if (a.favorite !== b.favorite) {
+                        return b.favorite ? 1 : -1
+                }
 
-		return b.editedTimestamp - a.editedTimestamp
-	})
+                return a.name.localeCompare(b.name)
+        })
 }
 
 export function sortAndFilterNotes(notes: Note[], search: string, activeTag: string) {
