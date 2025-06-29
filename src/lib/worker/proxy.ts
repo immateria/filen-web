@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import worker from "."
 import { showSaveFilePicker } from "native-file-system-adapter"
 import { type DriveCloudItem } from "@/components/drive"

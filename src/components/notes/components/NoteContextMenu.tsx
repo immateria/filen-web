@@ -11,6 +11,13 @@ import {
 } from "@/components/ui/context-menu"
 import { useTranslation } from "react-i18next"
 import { type Note, type NoteType, type NoteTag } from "@filen/sdk/dist/types/api/v3/notes"
+import {
+    NOTE_TYPE_TEXT,
+    NOTE_TYPE_RICH,
+    NOTE_TYPE_CHECKLIST,
+    NOTE_TYPE_MD,
+    NOTE_TYPE_CODE
+} from "@components/notes/constants/noteTypes"
 import { showConfirmDialog } from "@/components/dialogs/confirm"
 import worker from "@/lib/worker"
 import { useNotesStore } from "@/stores/notes.store"
@@ -600,38 +607,38 @@ export const ContextMenu = memo(
 							{t("contextMenus.notes.type")}
 						</ContextMenuSubTrigger>
 						<ContextMenuSubContent>
-							<ContextMenuItem
-								onClick={() => changeType("text")}
-								className={cn("cursor-pointer gap-3", note.type === "text" ? "text-blue-500" : "")}
-							>
+                                                        <ContextMenuItem
+                                                                onClick={() => changeType(NOTE_TYPE_TEXT)}
+                                                                className={cn("cursor-pointer gap-3", note.type === NOTE_TYPE_TEXT ? "text-blue-500" : "")}
+                                                        >
 								<Text size={iconSize} />
 								{t("contextMenus.notes.types.text")}
 							</ContextMenuItem>
-							<ContextMenuItem
-								onClick={() => changeType("rich")}
-								className={cn("cursor-pointer gap-3", note.type === "rich" ? "text-blue-500" : "")}
-							>
+                                                        <ContextMenuItem
+                                                                onClick={() => changeType(NOTE_TYPE_RICH)}
+                                                                className={cn("cursor-pointer gap-3", note.type === NOTE_TYPE_RICH ? "text-blue-500" : "")}
+                                                        >
 								<NotepadText size={iconSize} />
 								{t("contextMenus.notes.types.rich")}
 							</ContextMenuItem>
-							<ContextMenuItem
-								onClick={() => changeType("checklist")}
-								className={cn("cursor-pointer gap-3", note.type === "checklist" ? "text-blue-500" : "")}
-							>
+                                                        <ContextMenuItem
+                                                                onClick={() => changeType(NOTE_TYPE_CHECKLIST)}
+                                                                className={cn("cursor-pointer gap-3", note.type === NOTE_TYPE_CHECKLIST ? "text-blue-500" : "")}
+                                                        >
 								<ListChecks size={iconSize} />
 								{t("contextMenus.notes.types.checklist")}
 							</ContextMenuItem>
-							<ContextMenuItem
-								onClick={() => changeType("md")}
-								className={cn("cursor-pointer gap-3", note.type === "md" ? "text-blue-500" : "")}
-							>
+                                                        <ContextMenuItem
+                                                                onClick={() => changeType(NOTE_TYPE_MD)}
+                                                                className={cn("cursor-pointer gap-3", note.type === NOTE_TYPE_MD ? "text-blue-500" : "")}
+                                                        >
 								<BookMarked size={iconSize} />
 								{t("contextMenus.notes.types.md")}
 							</ContextMenuItem>
-							<ContextMenuItem
-								onClick={() => changeType("code")}
-								className={cn("cursor-pointer gap-3", note.type === "code" ? "text-blue-500" : "")}
-							>
+                                                        <ContextMenuItem
+                                                                onClick={() => changeType(NOTE_TYPE_CODE)}
+                                                                className={cn("cursor-pointer gap-3", note.type === NOTE_TYPE_CODE ? "text-blue-500" : "")}
+                                                        >
 								<Code size={iconSize} />
 								{t("contextMenus.notes.types.code")}
 							</ContextMenuItem>

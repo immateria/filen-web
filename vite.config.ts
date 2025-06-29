@@ -115,11 +115,14 @@ export default defineConfig({
 			typescript: true
 		})
 	],
-	resolve: {
-		alias: {
-			"@": path.resolve(__dirname, "./src")
-		}
-	},
+        resolve: {
+                alias: {
+                        "@": path.resolve(__dirname, "./src"),
+                        "@components": path.resolve(__dirname, "./src/components"),
+                        "@hooks": path.resolve(__dirname, "./src/hooks"),
+                        "@constants": path.resolve(__dirname, "./src/constants.ts")
+                }
+        },
 	worker: {
 		format: "es",
 		plugins: () => [

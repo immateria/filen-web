@@ -17,9 +17,12 @@
 		"noFallthroughCasesInSwitch": true,
 		"noUncheckedIndexedAccess": true,
 		"baseUrl": ".",
-		"paths": {
-			"@/*": ["./src/*"]
-		}
+                "paths": {
+                        "@/*": ["./src/*"],
+                        "@components/*": ["./src/components/*"],
+                        "@hooks/*": ["./src/hooks/*"],
+                        "@constants": ["./src/constants.ts"]
+                }
 	},
 	"include": ["src", "types.d.ts", "global.d.ts"],
 	"references": [

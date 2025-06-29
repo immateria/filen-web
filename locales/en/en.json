@@ -1203,9 +1203,10 @@
 			"access": "Access"
 		}
 	},
-	"notes": {
-		"contentPlaceholder": "Note content...",
-		"maxSizeReached": "Maximum note size is limited to {{chars}} characters",
+        "notes": {
+                "contentPlaceholder": "Note content...",
+                "maxSizeReached": "Maximum note size is limited to {{chars}} characters",
+                "tagAlreadyExists": "Tag already exists",
 		"empty": {
 			"title": "No notes yet",
 			"description": "Notes that you have created or that you have been added to will appear here",
