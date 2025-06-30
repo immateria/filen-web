@@ -48,7 +48,7 @@ import useIsDesktopHTTPServerOnline from "@/hooks/useIsDesktopHTTPServerOnline"
 import { useDirectoryPublicLinkStore } from "@/stores/publicLink.store"
 
 const goToPreviewTypes = ["audio", "docx", "image", "pdf"]
-const HEX_CHUNK_SIZE = 65536
+export const HEX_CHUNK_SIZE = 65536
 
 export const Loader = memo(() => {
 	return (
@@ -62,8 +62,8 @@ export const PreviewDialog = memo(() => {
 	const [open, setOpen] = useState<boolean>(false)
 	const [item, setItem] = useState<DriveCloudItem | null>(null)
         const [urlObjects, setURLObjects] = useState<Record<string, string>>({})
-        const [buffers, setBuffers] = useState<Record<string, Buffer>>({})
-        const [bytesLoaded, setBytesLoaded] = useState<Record<string, number>>({})
+       const [buffers, setBuffers] = useState<Record<string, Buffer>>({})
+       const [hexOffsets, setHexOffsets] = useState<Record<string, number>>({})
 	const openRef = useRef<boolean>(false)
 	const [didChange, setDidChange] = useState<boolean>(false)
 	const textRef = useRef<string>("")
@@ -268,12 +268,12 @@ export const PreviewDialog = memo(() => {
 					}
 				}
 
-                                setURLObjects({})
-                                setBuffers({})
-                                setBytesLoaded({})
-                                setItem(null)
-                        }
-                }, 3000)
+                               setURLObjects({})
+                               setBuffers({})
+                               setHexOffsets({})
+                               setItem(null)
+                       }
+               }, 3000)
         }, [urlObjects])
 
 	const onOpenChange = useCallback(
@@ -385,49 +385,66 @@ export const PreviewDialog = memo(() => {
                 [cleanup, isServiceWorkerOnline, isDesktopHTTPServerOnline]
         )
 
-        const loadHexChunk = useCallback(
-                async ({ itm, start = 0 }: { itm: DriveCloudItem; start?: number }) => {
-                        if (itm.type !== "file") {
-                                return
-                        }
+       const loadHexChunk = useCallback(
+               async ({ itm, start = 0 }: { itm: DriveCloudItem; start?: number }) => {
+                       if (itm.type !== "file") {
+                               return
+                       }
 
-                        try {
-                                const buffer = await readFileAndSanitize({
-                                        item: itm,
-                                        start,
-                                        end: start + HEX_CHUNK_SIZE,
-                                        emitEvents: false
-                                })
+                       try {
+                               const buffer = await readFileAndSanitize({
+                                       item: itm,
+                                       start,
+                                       end: start + HEX_CHUNK_SIZE,
+                                       emitEvents: false
+                               })
 
-                                setBuffers(prev => ({
-                                        ...prev,
-                                        [itm.uuid]: start === 0 ? buffer : Buffer.concat([prev[itm.uuid] ?? Buffer.from([]), buffer])
-                                }))
+                               setBuffers(prev => ({
+                                       ...prev,
+                                       [itm.uuid]: buffer
+                               }))
 
-                                setBytesLoaded(prev => ({
-                                        ...prev,
-                                        [itm.uuid]: start + buffer.length
-                                }))
-                        } catch (e) {
-                                console.error(e)
-                        }
-                },
-                [setBuffers, setBytesLoaded]
-        )
+                               setHexOffsets(prev => ({
+                                       ...prev,
+                                       [itm.uuid]: start
+                               }))
+                       } catch (e) {
+                               console.error(e)
+                       }
+               },
+               [setBuffers, setHexOffsets]
+       )
 
-        const loadMoreHex = useCallback(() => {
-                if (!item) {
-                        return
-                }
+       const loadNextHex = useCallback(() => {
+               if (!item) {
+                       return
+               }
 
-                const loaded = bytesLoaded[item.uuid] ?? 0
+               const offset = hexOffsets[item.uuid] ?? 0
+               const nextStart = offset + HEX_CHUNK_SIZE
 
-                if (loaded >= item.size) {
-                        return
-                }
+               if (nextStart >= item.size) {
+                       return
+               }
 
-                loadHexChunk({ itm: item, start: loaded })
-        }, [item, bytesLoaded, loadHexChunk])
+               loadHexChunk({ itm: item, start: nextStart })
+       }, [item, hexOffsets, loadHexChunk])
+
+       const loadPrevHex = useCallback(() => {
+               if (!item) {
+                       return
+               }
+
+               const offset = hexOffsets[item.uuid] ?? 0
+
+               if (offset === 0) {
+                       return
+               }
+
+               const prevStart = Math.max(0, offset - HEX_CHUNK_SIZE)
+
+               loadHexChunk({ itm: item, start: prevStart })
+       }, [item, hexOffsets, loadHexChunk])
 
 	const saveFile = useCallback(async () => {
 		if (!item || item.type !== "file" || !didChange || textRef.current.length === 0 || saving) {
@@ -771,11 +788,15 @@ export const PreviewDialog = memo(() => {
                                                         {previewType === "hex" && (
                                                                 <>
                                                                         {buffers[item.uuid] ? (
-                                                                                <HexViewer
-                                                                                        buffer={buffers[item.uuid] ?? Buffer.from([])}
-                                                                                        onLoadMore={loadMoreHex}
-                                                                                        hasMore={(bytesLoaded[item.uuid] ?? 0) < item.size}
-                                                                                />
+<HexViewer
+                buffer={buffers[item.uuid] ?? Buffer.from([])}
+                size={item.size}
+                offset={hexOffsets[item.uuid] ?? 0}
+                onNext={loadNextHex}
+                onPrev={loadPrevHex}
+                hasNext={(hexOffsets[item.uuid] ?? 0) + (buffers[item.uuid]?.length ?? 0) < item.size}
+                hasPrev={(hexOffsets[item.uuid] ?? 0) > 0}
+/>
                                                                         ) : (
                                                                                 <Loader />
                                                                         )}
