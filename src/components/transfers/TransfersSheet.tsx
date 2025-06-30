@@ -5,10 +5,10 @@ import useWindowSize from "@/hooks/useWindowSize"
 import eventEmitter from "@/lib/eventEmitter"
 import { type WorkerToMainMessage } from "@/lib/worker/types"
 import { useTransfersStore, type TransferState, type Transfer as TransferType } from "@/stores/transfers.store"
-import { Virtuoso } from "react-virtuoso"
+import TransferListView from "./ListView"
 import { calcSpeed, calcTimeLeft, getTimeRemaining, bpsToReadable } from "./utils"
 import throttle from "lodash/throttle"
-import { ArrowDownUp, Play, Pause, XCircle } from "lucide-react"
+import { Play, Pause, XCircle } from "lucide-react"
 import { IS_DESKTOP } from "@/constants"
 import Transfer from "./transfer"
 import { type MainToWindowMessage } from "@filen/desktop/dist/ipc"
@@ -370,32 +370,6 @@ export const Transfers = memo(() => {
 		}
 	}, [paused, errorToast, transfers, setTransfers])
 
-	const style = useMemo((): React.CSSProperties => {
-		return {
-			overflowX: "hidden",
-			overflowY: "auto",
-			height: virtuosoHeight + "px",
-			width: "100%"
-		}
-	}, [virtuosoHeight])
-
-	const components = useMemo(() => {
-		return {
-			EmptyPlaceholder: () => {
-				return (
-					<div
-						className="w-full flex flex-col items-center justify-center text-muted-foreground gap-2"
-						style={{
-							height: virtuosoHeight
-						}}
-					>
-						<ArrowDownUp size={60} />
-						<p>{t("transfers.noActiveTransfers")}</p>
-					</div>
-				)
-			}
-		}
-	}, [virtuosoHeight, t])
 
 	const onOpenChange = useCallback(
 		(o: boolean) => {
@@ -467,19 +441,14 @@ export const Transfers = memo(() => {
 				<SheetHeader className="mb-4">
 					<SheetTitle>{transfersSorted.length > 0 && t("transfers.title")}</SheetTitle>
 				</SheetHeader>
-				<Virtuoso
-					data={transfersSorted}
-					totalCount={transfersSorted.length}
-					height={virtuosoHeight}
-					width="100%"
-					computeItemKey={getItemKey}
-					itemContent={itemContent}
-					onDragOver={onDragOver}
-					defaultItemHeight={78}
-					components={components}
-					overscan={0}
-					style={style}
-				/>
+                                <TransferListView
+                                        transfers={transfersSorted}
+                                        height={virtuosoHeight}
+                                        getItemKey={getItemKey}
+                                        itemContent={itemContent}
+                                        onDragOver={onDragOver}
+                                        overscan={0}
+                                />
 				<div className="flex flex-row items-center gap-3 h-12 text-muted-foreground justify-end text-sm">
 					{remaining > 0 && remainingReadable.length > 0 && remaining < Infinity && (
 						<>
