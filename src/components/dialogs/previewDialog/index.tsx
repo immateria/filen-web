@@ -49,6 +49,7 @@ import { useDirectoryPublicLinkStore } from "@/stores/publicLink.store"
 
 const goToPreviewTypes = ["audio", "docx", "image", "pdf"]
 export const HEX_CHUNK_SIZE = 65536
+export const MAX_HEX_BUFFER_SIZE = 10 * 1024 * 1024
 
 export const Loader = memo(() => {
 	return (
@@ -392,12 +393,16 @@ export const PreviewDialog = memo(() => {
                        }
 
                        try {
-                               const buffer = await readFileAndSanitize({
+                               let buffer = await readFileAndSanitize({
                                        item: itm,
                                        start,
                                        end: start + HEX_CHUNK_SIZE,
                                        emitEvents: false
                                })
+
+                               if (buffer.length > MAX_HEX_BUFFER_SIZE) {
+                                       buffer = buffer.subarray(0, MAX_HEX_BUFFER_SIZE)
+                               }
 
                                setBuffers(prev => ({
                                        ...prev,

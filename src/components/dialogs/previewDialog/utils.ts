@@ -221,7 +221,7 @@ export function isFileStreamable(name: string, mime: string): boolean {
 }
 
 export function isBinaryBuffer(buffer: Buffer): boolean {
-        const sampleSize = Math.min(buffer.length, 512)
+        const sampleSize = Math.min(buffer.length, 1024)
         let suspicious = 0
 
         for (let i = 0; i < sampleSize; i++) {
