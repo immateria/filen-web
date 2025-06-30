@@ -1,167 +1,107 @@
-import { langs } from "@uiw/codemirror-extensions-langs"
+import { langs, type LanguageName } from "@uiw/codemirror-extensions-langs"
+import { languages as cmLanguages } from "@codemirror/language-data"
 import pathModule from "path"
 
-export function loadLanguage(name: string) {
-	const { ext } = pathModule.posix.parse(name.toLowerCase())
+const aliasToKey: Record<string, LanguageName> = {}
+for (const key of Object.keys(langs) as LanguageName[]) {
+       aliasToKey[key.toLowerCase()] = key
+}
 
-	switch (ext) {
-		case ".js":
-		case ".cjs":
-		case ".mjs": {
-			return langs.javascript({ typescript: false, jsx: false })
-		}
+const manualAliases: Record<string, LanguageName> = {
+       "postgresql": "pgsql",
+       "webassembly": "wast",
+       "clojurescript": "clojure",
+       "jsonld": "json",
+       "json-ld": "json",
+       "latex": "stex",
+       "tiki wiki": "tiki",
+       "angular template": "angular"
+}
 
-		case ".jsx": {
-			return langs.javascript({ typescript: false, jsx: true })
-		}
+for (const [alias, key] of Object.entries(manualAliases)) {
+       aliasToKey[alias] = key
+}
 
-		case ".tsx": {
-			return langs.javascript({ typescript: true, jsx: true })
-		}
+function normalize(name: string) {
+	return name.toLowerCase().replace(/[^a-z0-9]/g, "")
+}
 
-		case ".ts": {
-			return langs.javascript({ typescript: true, jsx: false })
-		}
+const extensionMap: Record<string, LanguageName> = {}
+const filenameMap: Array<[RegExp, LanguageName]> = []
+for (const desc of cmLanguages) {
+       let found: LanguageName | null = null
 
-		case ".md": {
-			return langs.markdown()
-		}
-
-		case ".cpp": {
-			return langs.cpp()
-		}
-
-		case ".c": {
-			return langs.c()
-		}
-
-		case ".php": {
-			return langs.php()
-		}
-
-		case ".htm":
-		case ".html5":
-		case ".html": {
-			return langs.html()
-		}
-
-		case ".css":
-		case ".css3": {
-			return langs.css()
-		}
-
-		case ".coffee":
-		case ".litcoffee": {
-			return langs.coffeescript()
-		}
-
-		case ".sass": {
-			return langs.sass()
-		}
-
-		case ".xml": {
-			return langs.xml()
-		}
-
-		case ".json": {
-			return langs.json()
-		}
-
-		case ".sql": {
-			return langs.sql()
-		}
-
-		case ".java": {
-			return langs.java()
-		}
-
-		case ".kt": {
-			return langs.kotlin()
-		}
-
-		case ".swift": {
-			return langs.swift()
-		}
-
-		case ".py3":
-		case ".py": {
-			return langs.python()
-		}
-
-		case ".cmake": {
-			return langs.cmake()
-		}
-
-		case ".cs": {
-			return langs.csharp()
-		}
-
-		case ".dart": {
-			return langs.dart()
-		}
-
-		case ".dockerfile": {
-			return langs.dockerfile()
-		}
-
-		case ".go": {
-			return langs.go()
-		}
-
-		case ".less": {
-			return langs.less()
-		}
-
-		case ".yaml": {
-			return langs.yaml()
-		}
-
-		case ".vue": {
-			return langs.vue()
-		}
-
-		case ".svelte": {
-			return langs.svelte()
-		}
-
-		case ".vbs": {
-			return langs.vbscript()
-		}
-
-		case ".cobol": {
-			return langs.cobol()
-		}
-
-		case ".toml": {
-			return langs.toml()
-		}
-
-		case ".conf":
-		case ".sh": {
-			return langs.shell()
-		}
-
-		case ".rs": {
-			return langs.rust()
-		}
-
-		case ".rb": {
-			return langs.ruby()
-		}
-
-		case ".ps1":
-		case ".bat":
-		case ".ps": {
-			return langs.powershell()
-		}
-
-		case ".protobuf":
-		case ".proto": {
-			return langs.protobuf()
-		}
-
-		default: {
-			return null
+	for (const alias of [desc.name, ...(desc.alias ?? [])]) {
+		const direct = alias.toLowerCase()
+		if (aliasToKey[direct]) {
+			found = aliasToKey[direct]
+			break
 		}
 	}
+
+	if (!found) {
+		for (const alias of [desc.name, ...(desc.alias ?? [])]) {
+			const simple = normalize(alias)
+			if (aliasToKey[simple]) {
+				found = aliasToKey[simple]
+				break
+			}
+		}
+	}
+
+	if (found) {
+		for (const ext of desc.extensions ?? []) {
+			const key = "." + ext.toLowerCase()
+			if (!extensionMap[key]) {
+				extensionMap[key] = found
+			}
+		}
+
+               if (desc.filename) {
+                       const flags = desc.filename.flags.includes("i") ? desc.filename.flags : desc.filename.flags + "i"
+                       const regex = new RegExp(desc.filename.source, flags)
+                       filenameMap.push([regex, found])
+               }
+       }
+}
+
+const manualMap: Record<string, string> = {
+	".html5": "html",
+	".css3": "css",
+	".litcoffee": "coffeescript",
+	".py3": "python",
+	".ps": "powershell",
+	".bat": "powershell",
+	".protobuf": "protobuf",
+	".dockerfile": "dockerfile",
+	".conf": "shell"
+}
+
+for (const [ext, lang] of Object.entries(manualMap)) {
+	const key = aliasToKey[lang]
+	if (key && !extensionMap[ext]) {
+		extensionMap[ext] = key
+	}
+}
+
+export function loadLanguage(name: string) {
+       const { ext, base } = pathModule.posix.parse(name)
+       const lowerExt = ext.toLowerCase()
+       const lowerBase = base.toLowerCase()
+
+       if (lowerExt) {
+               const key = extensionMap[lowerExt]
+
+               if (key && langs[key]) {
+                       return langs[key]()
+               }
+       }
+
+       for (const [regex, lang] of filenameMap) {
+               if (regex.test(lowerBase)) {
+                       return langs[lang]()
+               }
+       }
+
+	return null
 }
