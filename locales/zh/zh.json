@@ -504,6 +504,7 @@
 			"trash": "回收站",
 			"restore": "恢复",
 			"preview": "预览",
+                        "hexView": "Hex viewer",
 			"edit": "编辑",
 			"remove": "移除",
 			"stopSharing": "停止共享",
