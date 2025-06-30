@@ -48,7 +48,7 @@ import useIsDesktopHTTPServerOnline from "@/hooks/useIsDesktopHTTPServerOnline"
 import { useDirectoryPublicLinkStore } from "@/stores/publicLink.store"
 
 const goToPreviewTypes = ["audio", "docx", "image", "pdf"]
-const HEX_CHUNK_SIZE = 65536
+export const HEX_CHUNK_SIZE = 65536
 
 export const Loader = memo(() => {
 	return (

@@ -20,7 +20,7 @@ export const HexViewer = memo(
     }) => {
         const rows = useMemo(() => {
             const result: string[] = []
-            const addrWidth = Math.max(8, size.toString(16).length)
+            const addrWidth = Math.max(8, (size - 1).toString(16).length)
 
             for (let i = 0; i < buffer.length; i += 16) {
                 const chunk = buffer.subarray(i, i + 16)

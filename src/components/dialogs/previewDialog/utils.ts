@@ -228,10 +228,11 @@ export function isBinaryBuffer(buffer: Buffer): boolean {
                 const byte = buffer[i]
 
                 if (byte === 0) {
-                        return true
+                        suspicious++
+                        continue
                 }
 
-                if ((byte < 7 || (byte > 13 && byte < 32)) || byte > 126) {
+                if (byte < 7 || (byte > 13 && byte < 32) || byte > 126) {
                         suspicious++
                 }
         }
