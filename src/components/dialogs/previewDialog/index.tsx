@@ -2,12 +2,18 @@ import { memo, useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import eventEmitter from "@/lib/eventEmitter"
 import { type DriveCloudItem } from "@/components/drive"
-import { fileNameToPreviewType, ensureTextFileExtension, isFileStreamable } from "./utils"
+import {
+    fileNameToPreviewType,
+    ensureTextFileExtension,
+    isFileStreamable,
+    isBinaryBuffer
+} from "./utils"
 import Text from "./text"
 import PDF from "./pdf"
 import Image from "./image"
 import Video from "./video"
 import DocX from "./docx"
+import HexViewer from "./hex"
 import { Loader as LoaderIcon, X, Save, ArrowLeft, ArrowRight, Eye } from "lucide-react"
 import { showConfirmDialog } from "../confirm"
 import { uploadFile } from "@/lib/worker/worker"
@@ -42,6 +48,7 @@ import useIsDesktopHTTPServerOnline from "@/hooks/useIsDesktopHTTPServerOnline"
 import { useDirectoryPublicLinkStore } from "@/stores/publicLink.store"
 
 const goToPreviewTypes = ["audio", "docx", "image", "pdf"]
+const HEX_CHUNK_SIZE = 65536
 
 export const Loader = memo(() => {
 	return (
@@ -54,8 +61,9 @@ export const Loader = memo(() => {
 export const PreviewDialog = memo(() => {
 	const [open, setOpen] = useState<boolean>(false)
 	const [item, setItem] = useState<DriveCloudItem | null>(null)
-	const [urlObjects, setURLObjects] = useState<Record<string, string>>({})
-	const [buffers, setBuffers] = useState<Record<string, Buffer>>({})
+        const [urlObjects, setURLObjects] = useState<Record<string, string>>({})
+        const [buffers, setBuffers] = useState<Record<string, Buffer>>({})
+        const [bytesLoaded, setBytesLoaded] = useState<Record<string, number>>({})
 	const openRef = useRef<boolean>(false)
 	const [didChange, setDidChange] = useState<boolean>(false)
 	const textRef = useRef<string>("")
@@ -260,12 +268,13 @@ export const PreviewDialog = memo(() => {
 					}
 				}
 
-				setURLObjects({})
-				setBuffers({})
-				setItem(null)
-			}
-		}, 3000)
-	}, [urlObjects])
+                                setURLObjects({})
+                                setBuffers({})
+                                setBytesLoaded({})
+                                setItem(null)
+                        }
+                }, 3000)
+        }, [urlObjects])
 
 	const onOpenChange = useCallback(
 		async (openState: boolean) => {
@@ -296,11 +305,11 @@ export const PreviewDialog = memo(() => {
 		onOpenChange(false)
 	}, [onOpenChange])
 
-	const loadFile = useCallback(
-		async ({ itm }: { itm: DriveCloudItem }) => {
-			if (itm.type !== "file") {
-				return
-			}
+        const loadFile = useCallback(
+                async ({ itm }: { itm: DriveCloudItem }) => {
+                        if (itm.type !== "file") {
+                                return
+                        }
 
 			const previewType = fileNameToPreviewType(itm.name)
 			const maxPreviewSize =
@@ -343,30 +352,82 @@ export const PreviewDialog = memo(() => {
 					return
 				}
 
-				const buffer = await readFileAndSanitize({
-					item: itm,
-					emitEvents: false
-				})
+                                const buffer = await readFileAndSanitize({
+                                        item: itm,
+                                        emitEvents: false
+                                })
 
-				if (previewType === "text" || previewType === "docx" || previewType === "md" || previewType === "code") {
-					setBuffers(prev => ({
-						...prev,
-						[itm.uuid]: buffer
-					}))
-				} else {
-					setURLObjects(prev => ({
-						...prev,
-						[itm.uuid]: globalThis.URL.createObjectURL(new Blob([buffer], { type: itm.mime }))
-					}))
-				}
+                                if (previewType === "text" || previewType === "docx" || previewType === "md" || previewType === "code") {
+                                        if (isBinaryBuffer(buffer)) {
+                                                setPreviewType("hex")
+                                                setBuffers(prev => ({
+                                                        ...prev,
+                                                        [itm.uuid]: buffer
+                                                }))
+                                        } else {
+                                                setBuffers(prev => ({
+                                                        ...prev,
+                                                        [itm.uuid]: buffer
+                                                }))
+                                        }
+                                } else {
+                                        setURLObjects(prev => ({
+                                                ...prev,
+                                                [itm.uuid]: globalThis.URL.createObjectURL(new Blob([buffer], { type: itm.mime }))
+                                        }))
+                                }
 			} catch (e) {
 				console.error(e)
 			} finally {
 				cleanup()
 			}
 		},
-		[cleanup, isServiceWorkerOnline, isDesktopHTTPServerOnline]
-	)
+                [cleanup, isServiceWorkerOnline, isDesktopHTTPServerOnline]
+        )
+
+        const loadHexChunk = useCallback(
+                async ({ itm, start = 0 }: { itm: DriveCloudItem; start?: number }) => {
+                        if (itm.type !== "file") {
+                                return
+                        }
+
+                        try {
+                                const buffer = await readFileAndSanitize({
+                                        item: itm,
+                                        start,
+                                        end: start + HEX_CHUNK_SIZE,
+                                        emitEvents: false
+                                })
+
+                                setBuffers(prev => ({
+                                        ...prev,
+                                        [itm.uuid]: start === 0 ? buffer : Buffer.concat([prev[itm.uuid] ?? Buffer.from([]), buffer])
+                                }))
+
+                                setBytesLoaded(prev => ({
+                                        ...prev,
+                                        [itm.uuid]: start + buffer.length
+                                }))
+                        } catch (e) {
+                                console.error(e)
+                        }
+                },
+                [setBuffers, setBytesLoaded]
+        )
+
+        const loadMoreHex = useCallback(() => {
+                if (!item) {
+                        return
+                }
+
+                const loaded = bytesLoaded[item.uuid] ?? 0
+
+                if (loaded >= item.size) {
+                        return
+                }
+
+                loadHexChunk({ itm: item, start: loaded })
+        }, [item, bytesLoaded, loadHexChunk])
 
 	const saveFile = useCallback(async () => {
 		if (!item || item.type !== "file" || !didChange || textRef.current.length === 0 || saving) {
@@ -550,27 +611,39 @@ export const PreviewDialog = memo(() => {
 		}
 	}, [keyDownListener])
 
-	useEffect(() => {
-		const listener = eventEmitter.on("openPreviewModal", ({ item: itm }: { item: DriveCloudItem }) => {
-			textRef.current = ""
+        useEffect(() => {
+                const listener = eventEmitter.on("openPreviewModal", ({ item: itm }: { item: DriveCloudItem }) => {
+                        textRef.current = ""
 
-			setPreviewType(fileNameToPreviewType(itm.name))
-			setSaving(false)
-			setDidChange(false)
-			setItem(itm)
-			loadFile({ itm })
-			setOpen(true)
-		})
+                        setPreviewType(fileNameToPreviewType(itm.name))
+                        setSaving(false)
+                        setDidChange(false)
+                        setItem(itm)
+                        loadFile({ itm })
+                        setOpen(true)
+                })
 
-		const newTextFileListener = eventEmitter.on("createTextFile", () => {
-			createTextFile()
-		})
+                const hexListener = eventEmitter.on("openHexModal", ({ item: itm }: { item: DriveCloudItem }) => {
+                        textRef.current = ""
+
+                        setPreviewType("hex")
+                        setSaving(false)
+                        setDidChange(false)
+                        setItem(itm)
+                        loadHexChunk({ itm })
+                        setOpen(true)
+                })
+
+                const newTextFileListener = eventEmitter.on("createTextFile", () => {
+                        createTextFile()
+                })
 
 		return () => {
 			listener.remove()
-			newTextFileListener.remove()
-		}
-	}, [loadFile, createTextFile])
+                        newTextFileListener.remove()
+                        hexListener.remove()
+                }
+        }, [loadFile, loadHexChunk, createTextFile])
 
 	return (
 		<Dialog
@@ -681,20 +754,33 @@ export const PreviewDialog = memo(() => {
 									)}
 								</>
 							)}
-							{(previewType === "text" || previewType === "code" || previewType === "md") && (
-								<>
-									{buffers[item.uuid] ? (
-										<Text
-											buffer={buffers[item.uuid] ?? Buffer.from([])}
-											item={item}
-											onValueChange={onValueChange}
-											readOnly={readOnly}
-										/>
-									) : (
-										<Loader />
-									)}
-								</>
-							)}
+                                                        {(previewType === "text" || previewType === "code" || previewType === "md") && (
+                                                                <>
+                                                                        {buffers[item.uuid] ? (
+                                                                                <Text
+                                                                                        buffer={buffers[item.uuid] ?? Buffer.from([])}
+                                                                                        item={item}
+                                                                                        onValueChange={onValueChange}
+                                                                                        readOnly={readOnly}
+                                                                                />
+                                                                        ) : (
+                                                                                <Loader />
+                                                                        )}
+                                                                </>
+                                                        )}
+                                                        {previewType === "hex" && (
+                                                                <>
+                                                                        {buffers[item.uuid] ? (
+                                                                                <HexViewer
+                                                                                        buffer={buffers[item.uuid] ?? Buffer.from([])}
+                                                                                        onLoadMore={loadMoreHex}
+                                                                                        hasMore={(bytesLoaded[item.uuid] ?? 0) < item.size}
+                                                                                />
+                                                                        ) : (
+                                                                                <Loader />
+                                                                        )}
+                                                                </>
+                                                        )}
 							{previewType === "docx" && (
 								<>{buffers[item.uuid] ? <DocX buffer={buffers[item.uuid] ?? Buffer.from([])} /> : <Loader />}</>
 							)}

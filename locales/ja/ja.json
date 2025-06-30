@@ -494,6 +494,7 @@
 			"trash": "ゴミ箱",
 			"restore": "復元",
 			"preview": "プレビュー",
+                        "hexView": "Hex viewer",
 			"edit": "編集",
 			"remove": "削除",
 			"stopSharing": "共有を停止",

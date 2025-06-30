@@ -504,6 +504,7 @@
 			"trash": "Papperskorg",
 			"restore": "Återställ",
 			"preview": "Förhandsvisa",
+                        "hexView": "Hex viewer",
 			"edit": "Redigera",
 			"remove": "Ta bort",
 			"stopSharing": "Sluta dela",

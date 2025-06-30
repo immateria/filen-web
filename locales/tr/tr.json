@@ -494,6 +494,7 @@
             "trash": "Sil",
             "restore": "Geri yükle",
             "preview": "Önizleme",
+                        "hexView": "Hex viewer",
             "edit": "Düzenle",
             "remove": "Kaldır",
             "stopSharing": "Paylaşımı durdur",

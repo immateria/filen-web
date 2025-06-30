@@ -50,48 +50,38 @@ export default function NoteEditor({
         )
     }
 
-    const charCount = value.length
-
     if (usesRichEditor(note.type as NoteType)) {
         return (
-            <div className="relative w-full h-full">
-                <RichTextEditor
-                    key={`${note.uuid}-${note.type}`}
-                    value={value}
-                    setValue={setValue}
-                    onValueChange={onValueChange}
-                    width={resizablePanelSizes.right.width}
-                    height={windowSize.height - 48 - DESKTOP_TOPBAR_HEIGHT}
-                    type={note.type as "rich" | "checklist"}
-                    placeholder={placeholder}
-                    readOnly={!hasWritePermissions}
-                    maxLength={MAX_NOTE_SIZE - 64}
-                />
-                <p className="absolute bottom-2 right-2 text-xs text-muted-foreground">
-                    {charCount}/{MAX_NOTE_SIZE - 64}
-                </p>
-            </div>
+            <RichTextEditor
+                key={`${note.uuid}-${note.type}`}
+                value={value}
+                setValue={setValue}
+                onValueChange={onValueChange}
+                width={resizablePanelSizes.right.width}
+                height={windowSize.height - 48 - DESKTOP_TOPBAR_HEIGHT}
+                type={note.type as "rich" | "checklist"}
+                placeholder={placeholder}
+                readOnly={!hasWritePermissions}
+                maxLength={MAX_NOTE_SIZE - 64}
+                showCharCount={true}
+            />
         )
     }
 
     return (
-        <div className="relative w-full h-full">
-            <TextEditor
-                key={`${note.uuid}-${note.type}`}
-                fileName={note.type === "md" || editorType === "md" ? "note.md" : note.title}
-                value={value}
-                setValue={setValue}
-                onValueChange={onValueChange}
-                height={windowSize.height - 48 - DESKTOP_TOPBAR_HEIGHT}
-                type={editorType === "code" || editorType === "md" || codeLike(note.type) ? "code" : "text"}
-                placeholder={placeholder}
-                showMarkdownPreview={note.type === "md"}
-                readOnly={!hasWritePermissions}
-                maxLength={MAX_NOTE_SIZE - 64}
-            />
-            <p className="absolute bottom-2 right-2 text-xs text-muted-foreground">
-                {charCount}/{MAX_NOTE_SIZE - 64}
-            </p>
-        </div>
+        <TextEditor
+            key={`${note.uuid}-${note.type}`}
+            fileName={note.type === "md" || editorType === "md" ? "note.md" : note.title}
+            value={value}
+            setValue={setValue}
+            onValueChange={onValueChange}
+            height={windowSize.height - 48 - DESKTOP_TOPBAR_HEIGHT}
+            type={editorType === "code" || editorType === "md" || codeLike(note.type) ? "code" : "text"}
+            placeholder={placeholder}
+            showMarkdownPreview={note.type === "md"}
+            readOnly={!hasWritePermissions}
+            maxLength={MAX_NOTE_SIZE - 64}
+            showCharCount={true}
+        />
     )
 }
