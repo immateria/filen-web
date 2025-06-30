@@ -494,6 +494,7 @@
             "trash": "휴지통",
             "restore": "복원",
             "preview": "미리보기",
+                        "hexView": "Hex viewer",
             "edit": "편집",
             "remove": "제거",
             "stopSharing": "공유 중지",

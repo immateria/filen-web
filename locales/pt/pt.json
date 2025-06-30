@@ -494,6 +494,7 @@
 			"trash": "Lixeira",
 			"restore": "Restaurar",
 			"preview": "Pré-visualizar",
+                        "hexView": "Hex viewer",
 			"edit": "Editar",
 			"remove": "Remover",
 			"stopSharing": "Parar de compartilhar",

@@ -494,6 +494,7 @@
             "trash": "Koš",
             "restore": "Obnovit",
             "preview": "Náhled",
+                        "hexView": "Hex viewer",
             "edit": "Upravit",
             "remove": "Odstranit",
             "stopSharing": "Přestat sdílet",
