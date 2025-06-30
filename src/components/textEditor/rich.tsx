@@ -2,31 +2,34 @@ import { memo, useState, useCallback, useEffect, useMemo } from "react"
 import Quill from "react-quill"
 import { useTheme } from "@/providers/themeProvider"
 import { normalizeChecklistValue } from "../notes/utils"
+import CharCounter from "./CharCounter"
 
 export const RichTextEditor = memo(
-	({
-		width,
-		height,
-		readOnly,
-		value,
-		setValue,
-		onValueChange,
-		placeholder,
-		onBlur,
-		type,
-		maxLength
-	}: {
-		width: number
-		height: number
-		readOnly?: boolean
-		value: string
-		setValue: React.Dispatch<React.SetStateAction<string>>
-		onValueChange?: (value: string) => void
-		placeholder?: string
-		onBlur?: () => void
-		type: "rich" | "checklist"
-		maxLength?: number
-	}) => {
+        ({
+                width,
+                height,
+                readOnly,
+                value,
+                setValue,
+                onValueChange,
+                placeholder,
+                onBlur,
+                type,
+                maxLength,
+                showCharCount
+        }: {
+                width: number
+                height: number
+                readOnly?: boolean
+                value: string
+                setValue: React.Dispatch<React.SetStateAction<string>>
+                onValueChange?: (value: string) => void
+                placeholder?: string
+                onBlur?: () => void
+                type: "rich" | "checklist"
+                maxLength?: number
+                showCharCount?: boolean
+        }) => {
 		const [quillRef, setQuillRef] = useState<Quill>()
 		const theme = useTheme()
 
@@ -111,22 +114,25 @@ export const RichTextEditor = memo(
 			quillRef?.getEditor()?.root?.setAttribute("spellcheck", "false")
 		}, [quillRef])
 
-		return (
-			<Quill
-				theme="snow"
-				value={value}
-				placeholder={placeholder}
-				ref={setRef}
-				onBlur={onBlur}
-				readOnly={readOnly}
-				preserveWhitespace={true}
-				modules={modules}
-				formats={formats}
-				style={style}
-				onChange={onChange}
-			/>
-		)
-	}
+                return (
+                        <div className="relative w-full h-full">
+                                <Quill
+                                        theme="snow"
+                                        value={value}
+                                        placeholder={placeholder}
+                                        ref={setRef}
+                                        onBlur={onBlur}
+                                        readOnly={readOnly}
+                                        preserveWhitespace={true}
+                                        modules={modules}
+                                        formats={formats}
+                                        style={style}
+                                        onChange={onChange}
+                                />
+                                {showCharCount && <CharCounter value={value} maxLength={maxLength} />}
+                        </div>
+                )
+        }
 )
 
 export default RichTextEditor

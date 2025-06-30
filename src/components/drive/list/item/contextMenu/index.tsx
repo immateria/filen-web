@@ -43,9 +43,10 @@ import {
 	PaintBucket,
 	RotateCcw,
 	Delete,
-	Copy,
-	Info,
-	Gavel
+        Copy,
+        Info,
+        Gavel,
+        Binary
 } from "lucide-react"
 import useSuccessToast from "@/hooks/useSuccessToast"
 import { selectContacts } from "@/components/dialogs/selectContacts"
@@ -374,13 +375,21 @@ export const ContextMenu = memo(
 			}
 		}, [selectedItems, setItems, loadingToast, errorToast])
 
-		const preview = useCallback(() => {
-			if (selectedItems.length !== 1 && previewType !== "other") {
-				return
-			}
+                const preview = useCallback(() => {
+                        if (selectedItems.length !== 1 && previewType !== "other") {
+                                return
+                        }
 
-			eventEmitter.emit("openPreviewModal", { item: selectedItems[0] })
-		}, [selectedItems, previewType])
+                        eventEmitter.emit("openPreviewModal", { item: selectedItems[0] })
+                }, [selectedItems, previewType])
+
+                const hexView = useCallback(() => {
+                        if (selectedItems.length !== 1) {
+                                return
+                        }
+
+                        eventEmitter.emit("openHexModal", { item: selectedItems[0] })
+                }, [selectedItems])
 
 		const rename = useCallback(async () => {
 			const item = selectedItems[0]
@@ -699,27 +708,36 @@ export const ContextMenu = memo(
 					? MAX_PREVIEW_SIZE_SW
 					: MAX_PREVIEW_SIZE_WEB
 
-			if (
-				selectedItems.length === 1 &&
-				item.type === "file" &&
-				previewType !== "other" &&
-				maxPreviewSize >= item.size &&
-				!selectedItemsContainUndecryptableItems
-			) {
+                        if (
+                                selectedItems.length === 1 &&
+                                item.type === "file" &&
+                                previewType !== "other" &&
+                                maxPreviewSize >= item.size &&
+                                !selectedItemsContainUndecryptableItems
+                        ) {
 				if (!groups["download"]) {
 					groups["download"] = []
 				}
 
-				groups["download"].push(
-					<ContextMenuItem
-						onClick={preview}
-						className="cursor-pointer gap-3"
-					>
-						<Eye size={iconSize} />
-						{t("contextMenus.item.preview")}
-					</ContextMenuItem>
-				)
-			}
+                                groups["download"].push(
+                                        <ContextMenuItem
+                                                onClick={preview}
+                                                className="cursor-pointer gap-3"
+                                        >
+                                                <Eye size={iconSize} />
+                                                {t("contextMenus.item.preview")}
+                                        </ContextMenuItem>
+                                )
+                                groups["download"].push(
+                                        <ContextMenuItem
+                                                onClick={hexView}
+                                                className="cursor-pointer gap-3"
+                                        >
+                                                <Binary size={iconSize} />
+                                                {t("contextMenus.item.hexView")}
+                                        </ContextMenuItem>
+                                )
+                        }
 
 			if (selectedItems.length === 1 && item.type === "directory" && !driveURLState.trash) {
 				if (!groups["open"]) {
@@ -1065,8 +1083,9 @@ export const ContextMenu = memo(
 			})
 		}, [
 			selectedItems.length,
-			preview,
-			t,
+                        preview,
+                        hexView,
+                        t,
 			selectedItemsContainUndecryptableItems,
 			previewType,
 			openDirectory,

@@ -1,5 +1,6 @@
 import pathModule from "path"
 import mimeTypes from "mime-types"
+import isBinaryPath from "is-binary-path"
 
 /**
  * Convert file name to preview type.
@@ -99,10 +100,16 @@ export function fileNameToPreviewType(name: string) {
 			return "docx"
 		}
 
-		default: {
-			return "other"
-		}
-	}
+                default: {
+                        const mime = mimeTypes.lookup(parsed.ext)
+
+                        if ((mime && mime.startsWith("text/")) || !isBinaryPath(name)) {
+                                return "text"
+                        }
+
+                        return "other"
+                }
+        }
 }
 
 /**
@@ -208,7 +215,17 @@ export const streamableMimeTypes: string[] = [
 ]
 
 export function isFileStreamable(name: string, mime: string): boolean {
-	const mimeType = mime.length > 0 ? mime : mimeTypes.lookup(name) || "application/octet-stream"
+        const mimeType = mime.length > 0 ? mime : mimeTypes.lookup(name) || "application/octet-stream"
 
-	return streamableMimeTypes.includes(mimeType)
+        return streamableMimeTypes.includes(mimeType)
+}
+
+export function isBinaryBuffer(buffer: Buffer): boolean {
+        for (let i = 0; i < Math.min(buffer.length, 24); i++) {
+                if (buffer[i] === 0) {
+                        return true
+                }
+        }
+
+        return false
 }

@@ -494,6 +494,7 @@
                     "trash": "Papelera",
                     "restore": "Restaurar",
                     "preview": "Vista previa",
+                        "hexView": "Hex viewer",
                     "edit": "Editar",
                     "remove": "Eliminar",
                     "stopSharing": "Dejar de compartir",
