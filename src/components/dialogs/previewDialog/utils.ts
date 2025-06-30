@@ -220,12 +220,26 @@ export function isFileStreamable(name: string, mime: string): boolean {
         return streamableMimeTypes.includes(mimeType)
 }
 
+const BINARY_SAMPLE_SIZE = 8192
 export function isBinaryBuffer(buffer: Buffer): boolean {
-        for (let i = 0; i < Math.min(buffer.length, 24); i++) {
-                if (buffer[i] === 0) {
-                        return true
-                }
-        }
+       const sample = buffer.subarray(0, BINARY_SAMPLE_SIZE)
 
-        return false
+       const decoded = new TextDecoder("utf-8").decode(sample)
+       const printable = /[\p{L}\p{N}\p{P}\p{S}\p{Zs}]/u
+       let suspicious = 0
+
+       for (const ch of decoded) {
+               const code = ch.charCodeAt(0)
+
+               if (
+                       code === 0x0 ||
+                       code === 0xfffd ||
+                       (code < 32 && code !== 9 && code !== 10 && code !== 13) ||
+                       !printable.test(ch)
+               ) {
+                       suspicious++
+               }
+       }
+
+       return suspicious / decoded.length > 0.4
 }
