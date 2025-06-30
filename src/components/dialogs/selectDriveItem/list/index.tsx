@@ -1,6 +1,5 @@
 import { memo, useEffect, useRef, useMemo, useCallback } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Virtuoso } from "react-virtuoso"
 import worker from "@/lib/worker"
 import ListItem from "./listItem"
 import eventEmitter from "@/lib/eventEmitter"
@@ -9,6 +8,7 @@ import { type SelectionType, type ResponseItem } from ".."
 import { type DriveCloudItem } from "@/components/drive"
 import { Loader } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { FileListView } from "@/components/fileBrowser"
 
 export const List = memo(
 	({
@@ -75,14 +75,6 @@ export const List = memo(
 			[setPathname, setResponseItems, responseItems, selectMultiple, selectionType, pathname]
 		)
 
-		const style = useMemo((): React.CSSProperties => {
-			return {
-				overflowX: "hidden",
-				overflowY: "auto",
-				height: 384 + "px",
-				width: "100%"
-			}
-		}, [])
 
 		useEffect(() => {
 			// We have to manually refetch the query because the component does not remount, only the location pathname changes.
@@ -123,18 +115,16 @@ export const List = memo(
 			)
 		}
 
-		return (
-			<Virtuoso
-				data={itemsOrdered}
-				totalCount={itemsOrdered.length}
-				height={384}
-				width="100%"
-				computeItemKey={getItemKey}
-				itemContent={itemContent}
-				style={style}
-			/>
-		)
-	}
+               return (
+                       <FileListView
+                               items={itemsOrdered}
+                               showSkeletons={false}
+                               height={384}
+                               getItemKey={getItemKey}
+                               itemContent={itemContent}
+                       />
+               )
+       }
 )
 
 export default List
