@@ -221,11 +221,22 @@ export function isFileStreamable(name: string, mime: string): boolean {
 }
 
 export function isBinaryBuffer(buffer: Buffer): boolean {
-        for (let i = 0; i < Math.min(buffer.length, 24); i++) {
-                if (buffer[i] === 0) {
-                        return true
-                }
-        }
+       const sample = buffer.subarray(0, 4096)
 
-        return false
+       const decoded = new TextDecoder("utf-8").decode(sample)
+       let suspicious = 0
+
+       for (let i = 0; i < decoded.length; i++) {
+               const code = decoded.charCodeAt(i)
+
+               if (
+                       code === 0xfffd ||
+                       code === 0x0 ||
+                       (code < 32 && code !== 9 && code !== 10 && code !== 13)
+               ) {
+                       suspicious++
+               }
+       }
+
+       return suspicious / sample.length > 0.3
 }
