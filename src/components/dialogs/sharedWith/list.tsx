@@ -1,5 +1,5 @@
 import { memo, useCallback, useMemo } from "react"
-import { type DriveCloudItem } from "../../drive"
+import { type DriveCloudItem } from "@/components/drive"
 import { Virtuoso } from "react-virtuoso"
 import Receiver from "./receiver"
 import { type CloudItemReceiver } from "@filen/sdk/dist/types/cloud"

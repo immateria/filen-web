@@ -9,7 +9,7 @@ import {
 	ContextMenuSubTrigger,
 	ContextMenuSubContent
 } from "@/components/ui/context-menu"
-import { type DriveCloudItem } from "../../.."
+import { type DriveCloudItem } from "@/components/drive"
 import { useDriveItemsStore, useDriveSharedStore } from "@/stores/drive.store"
 import { useTranslation } from "react-i18next"
 import MoveTree from "./moveTree"

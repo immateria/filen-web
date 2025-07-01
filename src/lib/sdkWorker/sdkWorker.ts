@@ -1,7 +1,7 @@
-import { getSDK } from "../sdk"
+import { getSDK } from "@/lib/sdk"
 import { type FilenSDKConfig, type SDKWorker, PauseSignal } from "@filen/sdk"
 import { transfer } from "comlink"
-import eventEmitter from "../eventEmitter"
+import eventEmitter from "@/lib/eventEmitter"
 
 export type SDKWorkerToMainWorkerMessage =
 	| {

@@ -3,7 +3,7 @@ import { type ChatConversationParticipant } from "@filen/sdk/dist/types/api/v3/c
 import { useMemo, memo, useRef, useEffect, createElement, useCallback } from "react"
 import EMOJI_REGEX from "emojibase-regex"
 import { type TFunction } from "i18next"
-import { customEmojis } from "../../customEmojis"
+import { customEmojis } from "@/components/chats/customEmojis"
 import { cn } from "@/lib/utils"
 import { Emoji } from "emoji-mart"
 import { TooltipContent, Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"

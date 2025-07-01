@@ -1,4 +1,4 @@
-import { getSDK } from "../sdk"
+import { getSDK } from "@/lib/sdk"
 import {
 	type FilenSDKConfig,
 	type FileMetadata,
@@ -13,9 +13,9 @@ import { type DriveCloudItem } from "@/components/drive"
 import { setItem, getItem, removeItem } from "@/lib/localForage"
 import { type WorkerToMainMessage, type DriveCloudItemWithPath } from "./types"
 import { ZipWriter } from "@zip.js/zip.js"
-import { promiseAllChunked } from "../utils"
+import { promiseAllChunked } from "@/lib/utils"
 import { type DirDownloadType } from "@filen/sdk/dist/types/api/v3/dir/download"
-import eventEmitter from "../eventEmitter"
+import eventEmitter from "@/lib/eventEmitter"
 import { transfer } from "comlink"
 import { type CloudItemReceiver } from "@filen/sdk/dist/types/cloud"
 import {
@@ -26,7 +26,7 @@ import {
 	DESKTOP_HTTP_SERVER_PORT,
 	IS_DESKTOP
 } from "@/constants"
-import pdfjsLib from "../pdfJS"
+import pdfjsLib from "@/lib/pdfJS"
 import { type Note, type NoteType, type NoteTag } from "@filen/sdk/dist/types/api/v3/notes"
 import { simpleDate } from "@/utils"
 import { type ChatConversation } from "@filen/sdk/dist/types/api/v3/chat/conversations"
@@ -40,7 +40,7 @@ import { type BlockedContact } from "@filen/sdk/dist/types/api/v3/contacts/block
 import { type UserAccountResponse } from "@filen/sdk/dist/types/api/v3/user/account"
 import axios, { type AxiosResponse } from "axios"
 import { workerCorsHeadCache, workerParseOGFromURLCache, clearThumbnailCache, calculateThumbnailCacheUsage } from "@/cache"
-import { Semaphore } from "../semaphore"
+import { Semaphore } from "@/lib/semaphore"
 import { type FileLinkStatusResponse } from "@filen/sdk/dist/types/api/v3/file/link/status"
 import { v4 as uuidv4 } from "uuid"
 import { type UserEvent } from "@filen/sdk/dist/types/api/v3/user/events"
@@ -57,8 +57,8 @@ import { fileNameToThumbnailType, isFileStreamable } from "@/components/dialogs/
 import DOMPurify from "dompurify"
 import { type DirExistsResponse } from "@filen/sdk/dist/types/api/v3/dir/exists"
 import { type RemoteConfig } from "@/types"
-import { initializeSDKWorkers } from "../sdkWorker"
-import { type SDKWorkerToMainWorkerMessage } from "../sdkWorker/sdkWorker"
+import { initializeSDKWorkers } from "@/lib/sdkWorker"
+import { type SDKWorkerToMainWorkerMessage } from "@/lib/sdkWorker/sdkWorker"
 
 const parseOGFromURLMutex = new Semaphore(1)
 const corsHeadMutex = new Semaphore(1)
