@@ -466,7 +466,9 @@
 			"modified": "Modified",
 			"uploaded": "Uploaded",
 			"files": "Files",
-			"directories": "Directories"
+			"directories": "Directories",
+			"aliases": "Aliases",
+			"noAliases": "No aliases"
 		},
 		"desktopUpdate": {
 			"title": "Update available",
@@ -523,6 +525,12 @@
 			"info": "Info",
 			"manageShareOut": "Manage share",
 			"manageShareIn": "Remove share",
+			"aliases": {
+                                "add": "Add to alias",
+                                "remove": "Remove alias",
+                                "create": "Create alias",
+                                "follow": "Open location"
+                        },
 			"dialogs": {
 				"trash": {
 					"title": "Trash",
@@ -1129,6 +1137,13 @@
 				"title": "Share",
 				"placeholder": "Email address of a Filen user",
 				"continue": "Share"
+			},
+			"aliases": {
+				"create": {
+					"title": "Create alias",
+					"placeholder": "Name",
+					"continue": "Create"
+				}
 			}
 		},
 		"linksNoSub": {
@@ -1204,10 +1219,10 @@
 			"access": "Access"
 		}
 	},
-        "notes": {
-                "contentPlaceholder": "Note content...",
-                "maxSizeReached": "Maximum note size is limited to {{chars}} characters",
-                "tagAlreadyExists": "Tag already exists",
+	"notes": {
+		"contentPlaceholder": "Note content...",
+		"maxSizeReached": "Maximum note size is limited to {{chars}} characters",
+		"tagAlreadyExists": "Tag already exists",
 		"empty": {
 			"title": "No notes yet",
 			"description": "Notes that you have created or that you have been added to will appear here",
