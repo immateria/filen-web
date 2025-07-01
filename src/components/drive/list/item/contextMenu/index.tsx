@@ -104,7 +104,7 @@ export const ContextMenu = memo(
 		const publicLinkURLState = usePublicLinkURLState()
 		const isServiceWorkerOnline = useIsServiceWorkerOnline()
 		const isDesktopHTTPServerOnline = useIsDesktopHTTPServerOnline()
-		const { aliases: aliasMap, addAlias, addItemToAlias, removeItemFromAlias, getItemAliases, removeAlias } = useDriveAliases()
+               const { aliases: aliasMap, addAlias, addItemToAlias, removeItemFromAlias, getItemAliases } = useDriveAliases()
 		const itemAliases = useMemo(() => getItemAliases(item.uuid), [getItemAliases, item.uuid])
 
 		const isInsidePublicLink = useMemo(() => {
@@ -1127,9 +1127,6 @@ export const ContextMenu = memo(
                                                                                 key={alias}
                                                                                 onClick={() => {
                                                                                         removeItemFromAlias(alias, item.uuid)
-                                                                                        if ((aliasMap[alias]?.length ?? 1) <= 1) {
-                                                                                                removeAlias(alias)
-                                                                                        }
                                                                                 }}
                                                                                 className="cursor-pointer"
                                                                         >
@@ -1239,7 +1236,6 @@ export const ContextMenu = memo(
                         itemAliases,
                         aliasMap,
                        openAliasLocation,
-                        removeAlias,
                         manageShareOut,
 			removeShared,
 			isDesktopHTTPServerOnline,
