@@ -1,25 +1,35 @@
 import { create } from "zustand"
+import { type Setter, createStoreSetter } from "./helpers"
 
-export type MountsStore = {
-	enablingNetworkDrive: boolean
-	enablingS3: boolean
-	enablingWebDAV: boolean
-	setEnablingNetworkDrive: (fn: boolean | ((prev: boolean) => boolean)) => void
-	setEnablingS3: (fn: boolean | ((prev: boolean) => boolean)) => void
-	setEnablingWebDAV: (fn: boolean | ((prev: boolean) => boolean)) => void
+export type MountsState = {
+       enablingNetworkDrive: boolean
+       enablingS3: boolean
+       enablingWebDAV: boolean
 }
 
-export const useMountsStore = create<MountsStore>(set => ({
-	enablingNetworkDrive: false,
-	enablingS3: false,
-	enablingWebDAV: false,
-	setEnablingNetworkDrive(fn) {
-		set(state => ({ enablingNetworkDrive: typeof fn === "function" ? fn(state.enablingNetworkDrive) : fn }))
-	},
-	setEnablingS3(fn) {
-		set(state => ({ enablingNetworkDrive: typeof fn === "function" ? fn(state.enablingNetworkDrive) : fn }))
-	},
-	setEnablingWebDAV(fn) {
-		set(state => ({ enablingNetworkDrive: typeof fn === "function" ? fn(state.enablingNetworkDrive) : fn }))
-	}
-}))
+export type MountsStore = MountsState & {
+       setEnablingNetworkDrive: Setter<boolean>
+       setEnablingS3: Setter<boolean>
+       setEnablingWebDAV: Setter<boolean>
+       reset: () => void
+}
+
+const initialState: MountsState = {
+       enablingNetworkDrive: false,
+       enablingS3: false,
+       enablingWebDAV: false
+}
+
+export const useMountsStore = create<MountsStore>(set => {
+       const createSetter = createStoreSetter<MountsState>(set)
+
+       return {
+               ...initialState,
+               setEnablingNetworkDrive: createSetter("enablingNetworkDrive"),
+               setEnablingS3: createSetter("enablingS3"),
+               setEnablingWebDAV: createSetter("enablingWebDAV"),
+               reset() {
+                       set({ ...initialState })
+               }
+       }
+})

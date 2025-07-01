@@ -1,13 +1,27 @@
 import { create } from "zustand"
+import { type Setter, createStoreSetter } from "./helpers"
 
-export type ContactsStore = {
-	requestsInCount: number
-	setRequestsInCount: (fn: number | ((prev: number) => number)) => void
+export type ContactsState = {
+       requestsInCount: number
 }
 
-export const useContactsStore = create<ContactsStore>(set => ({
-	requestsInCount: 0,
-	setRequestsInCount(fn) {
-		set(state => ({ requestsInCount: typeof fn === "function" ? fn(state.requestsInCount) : fn }))
-	}
-}))
+export type ContactsStore = ContactsState & {
+       setRequestsInCount: Setter<number>
+       reset: () => void
+}
+
+const initialState: ContactsState = {
+       requestsInCount: 0
+}
+
+export const useContactsStore = create<ContactsStore>(set => {
+       const createSetter = createStoreSetter<ContactsState>(set)
+
+       return {
+               ...initialState,
+               setRequestsInCount: createSetter("requestsInCount"),
+               reset() {
+                       set({ ...initialState })
+               }
+       }
+})

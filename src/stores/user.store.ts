@@ -1,33 +1,37 @@
 import { create } from "zustand"
 import { type UserAccountResponse } from "@filen/sdk/dist/types/api/v3/user/account"
 import { type UserSettingsResponse } from "@filen/sdk/dist/types/api/v3/user/settings"
+import { type Setter, createStoreSetter } from "./helpers"
 
-export type UserStore = {
-	account: UserAccountResponse | null
-	settings: UserSettingsResponse | null
-	cancelledSubs: string[]
-	setAccount: (fn: UserAccountResponse | null | ((prev: UserAccountResponse | null) => UserAccountResponse | null)) => void
-	setSettings: (fn: UserSettingsResponse | null | ((prev: UserSettingsResponse | null) => UserSettingsResponse | null)) => void
-	setCancelledSubs: (fn: string[] | ((prev: string[]) => string[])) => void
+export type UserState = {
+       account: UserAccountResponse | null
+       settings: UserSettingsResponse | null
+       cancelledSubs: string[]
 }
 
-export const useUserStore = create<UserStore>(set => ({
-	account: null,
-	settings: null,
-	cancelledSubs: [],
-	setAccount(fn) {
-		set(state => ({
-			account: typeof fn === "function" ? fn(state.account) : fn
-		}))
-	},
-	setSettings(fn) {
-		set(state => ({
-			settings: typeof fn === "function" ? fn(state.settings) : fn
-		}))
-	},
-	setCancelledSubs(fn) {
-		set(state => ({
-			cancelledSubs: typeof fn === "function" ? fn(state.cancelledSubs) : fn
-		}))
-	}
-}))
+export type UserStore = UserState & {
+       setAccount: Setter<UserAccountResponse | null>
+       setSettings: Setter<UserSettingsResponse | null>
+       setCancelledSubs: Setter<string[]>
+       reset: () => void
+}
+
+const initialState: UserState = {
+       account: null,
+       settings: null,
+       cancelledSubs: []
+}
+
+export const useUserStore = create<UserStore>(set => {
+       const createSetter = createStoreSetter<UserState>(set)
+
+       return {
+               ...initialState,
+               setAccount: createSetter("account"),
+               setSettings: createSetter("settings"),
+               setCancelledSubs: createSetter("cancelledSubs"),
+               reset() {
+                       set({ ...initialState })
+               }
+       }
+})

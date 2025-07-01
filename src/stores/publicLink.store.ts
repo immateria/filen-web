@@ -1,86 +1,83 @@
 import { create } from "zustand"
 import { type DriveCloudItem } from "@/components/drive"
+import { type Setter, createStoreSetter } from "./helpers"
 
-export type DirectoryPublicLinkStore = {
-	items: DriveCloudItem[]
-	searchTerm: string
-	virtualURL: string
-	passwordState: {
-		uuid: string
-		password: string
-	}
-	downloadBtn: boolean
-	setItems: (fn: DriveCloudItem[] | ((prev: DriveCloudItem[]) => DriveCloudItem[])) => void
-	setSearchTerm: (fn: string | ((prev: string) => string)) => void
-	setVirtualURL: (fn: string | ((prev: string) => string)) => void
-	setPasswordState: (
-		fn:
-			| {
-					uuid: string
-					password: string
-			  }
-			| ((prev: { uuid: string; password: string }) => {
-					uuid: string
-					password: string
-			  })
-	) => void
-	setDownloadBtn: (fn: boolean | ((prev: boolean) => boolean)) => void
+export type DirectoryPublicLinkState = {
+       items: DriveCloudItem[]
+       searchTerm: string
+       virtualURL: string
+       passwordState: {
+               uuid: string
+               password: string
+       }
+       downloadBtn: boolean
 }
 
-export const useDirectoryPublicLinkStore = create<DirectoryPublicLinkStore>(set => ({
-	items: [],
-	searchTerm: "",
-	virtualURL: "",
-	passwordState: {
-		uuid: "",
-		password: ""
-	},
-	downloadBtn: false,
-	setItems(fn) {
-		set(state => ({ items: typeof fn === "function" ? fn(state.items) : fn }))
-	},
-	setSearchTerm(fn) {
-		set(state => ({ searchTerm: typeof fn === "function" ? fn(state.searchTerm) : fn }))
-	},
-	setVirtualURL(fn) {
-		set(state => ({ virtualURL: typeof fn === "function" ? fn(state.virtualURL) : fn }))
-	},
-	setPasswordState(fn) {
-		set(state => ({ passwordState: typeof fn === "function" ? fn(state.passwordState) : fn }))
-	},
-	setDownloadBtn(fn) {
-		set(state => ({ downloadBtn: typeof fn === "function" ? fn(state.downloadBtn) : fn }))
-	}
-}))
-
-export type PublicLinkStore = {
-	passwordState: {
-		uuid: string
-		password: string
-		salt: string
-	}
-	setPasswordState: (
-		fn:
-			| {
-					uuid: string
-					password: string
-					salt: string
-			  }
-			| ((prev: { uuid: string; password: string; salt: string }) => {
-					uuid: string
-					password: string
-					salt: string
-			  })
-	) => void
+export type DirectoryPublicLinkStore = DirectoryPublicLinkState & {
+       setItems: Setter<DriveCloudItem[]>
+       setSearchTerm: Setter<string>
+       setVirtualURL: Setter<string>
+       setPasswordState: Setter<{ uuid: string; password: string }>
+       setDownloadBtn: Setter<boolean>
+       reset: () => void
 }
 
-export const usePublicLinkStore = create<PublicLinkStore>(set => ({
-	passwordState: {
-		uuid: "",
-		password: "",
-		salt: ""
-	},
-	setPasswordState(fn) {
-		set(state => ({ passwordState: typeof fn === "function" ? fn(state.passwordState) : fn }))
-	}
-}))
+const directoryInitialState: DirectoryPublicLinkState = {
+       items: [],
+       searchTerm: "",
+       virtualURL: "",
+       passwordState: {
+               uuid: "",
+               password: ""
+       },
+       downloadBtn: false
+}
+
+export const useDirectoryPublicLinkStore = create<DirectoryPublicLinkStore>(set => {
+       const createSetter = createStoreSetter<DirectoryPublicLinkState>(set)
+
+       return {
+               ...directoryInitialState,
+               setItems: createSetter("items"),
+               setSearchTerm: createSetter("searchTerm"),
+               setVirtualURL: createSetter("virtualURL"),
+               setPasswordState: createSetter("passwordState"),
+               setDownloadBtn: createSetter("downloadBtn"),
+               reset() {
+                       set({ ...directoryInitialState })
+               }
+       }
+})
+
+export type PublicLinkState = {
+       passwordState: {
+               uuid: string
+               password: string
+               salt: string
+       }
+}
+
+export type PublicLinkStore = PublicLinkState & {
+       setPasswordState: Setter<{ uuid: string; password: string; salt: string }>
+       reset: () => void
+}
+
+const publicInitialState: PublicLinkState = {
+       passwordState: {
+               uuid: "",
+               password: "",
+               salt: ""
+       }
+}
+
+export const usePublicLinkStore = create<PublicLinkStore>(set => {
+       const createSetter = createStoreSetter<PublicLinkState>(set)
+
+       return {
+               ...publicInitialState,
+               setPasswordState: createSetter("passwordState"),
+               reset() {
+                       set({ ...publicInitialState })
+               }
+       }
+})

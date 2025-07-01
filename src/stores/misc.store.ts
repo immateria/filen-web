@@ -1,39 +1,39 @@
 import { create } from "zustand"
+import { type Setter, createStoreSetter } from "./helpers"
 
-export type MiscStore = {
-	lockDialogOpen: boolean
-	updateDialogOpen: boolean
-	isOnlineDialogOpen: boolean
-	maintenanceDialogOpen: boolean
-	setLockDialogOpen: (fn: boolean | ((prev: boolean) => boolean)) => void
-	setUpdateDialogOpen: (fn: boolean | ((prev: boolean) => boolean)) => void
-	setIsOnlineDialogOpen: (fn: boolean | ((prev: boolean) => boolean)) => void
-	setMaintenanceDialogOpen: (fn: boolean | ((prev: boolean) => boolean)) => void
+export type MiscState = {
+       lockDialogOpen: boolean
+       updateDialogOpen: boolean
+       isOnlineDialogOpen: boolean
+       maintenanceDialogOpen: boolean
 }
 
-export const useMiscStore = create<MiscStore>(set => ({
-	lockDialogOpen: false,
-	updateDialogOpen: false,
-	isOnlineDialogOpen: false,
-	maintenanceDialogOpen: false,
-	setLockDialogOpen(fn) {
-		set(state => ({
-			lockDialogOpen: typeof fn === "function" ? fn(state.lockDialogOpen) : fn
-		}))
-	},
-	setIsOnlineDialogOpen(fn) {
-		set(state => ({
-			isOnlineDialogOpen: typeof fn === "function" ? fn(state.isOnlineDialogOpen) : fn
-		}))
-	},
-	setUpdateDialogOpen(fn) {
-		set(state => ({
-			updateDialogOpen: typeof fn === "function" ? fn(state.updateDialogOpen) : fn
-		}))
-	},
-	setMaintenanceDialogOpen(fn) {
-		set(state => ({
-			maintenanceDialogOpen: typeof fn === "function" ? fn(state.maintenanceDialogOpen) : fn
-		}))
-	}
-}))
+export type MiscStore = MiscState & {
+       setLockDialogOpen: Setter<boolean>
+       setUpdateDialogOpen: Setter<boolean>
+       setIsOnlineDialogOpen: Setter<boolean>
+       setMaintenanceDialogOpen: Setter<boolean>
+       reset: () => void
+}
+
+const initialState: MiscState = {
+       lockDialogOpen: false,
+       updateDialogOpen: false,
+       isOnlineDialogOpen: false,
+       maintenanceDialogOpen: false
+}
+
+export const useMiscStore = create<MiscStore>(set => {
+       const createSetter = createStoreSetter<MiscState>(set)
+
+       return {
+               ...initialState,
+               setLockDialogOpen: createSetter("lockDialogOpen"),
+               setUpdateDialogOpen: createSetter("updateDialogOpen"),
+               setIsOnlineDialogOpen: createSetter("isOnlineDialogOpen"),
+               setMaintenanceDialogOpen: createSetter("maintenanceDialogOpen"),
+               reset() {
+                       set({ ...initialState })
+               }
+       }
+})
