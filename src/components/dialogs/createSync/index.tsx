@@ -11,49 +11,25 @@ import {
 } from "@/components/ui/alert-dialog"
 import eventEmitter from "@/lib/eventEmitter"
 import { useTranslation } from "react-i18next"
-import { Button } from "../ui/button"
-import Input from "../input"
+import { Button } from "@ui/button"
+import Input from "@components/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Info, Loader } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { TOOLTIP_POPUP_DELAY, IS_DESKTOP } from "@/constants"
-import { selectDriveItem } from "./selectDriveItem"
+import { selectDriveItem } from "@dialogs/selectDriveItem"
 import useErrorToast from "@/hooks/useErrorToast"
 import { validate as validateUUID, v4 as uuidv4 } from "uuid"
-import useDesktopConfig, { getDesktopConfig } from "@/hooks/useDesktopConfig"
+import useDesktopConfig from "@/hooks/useDesktopConfig"
 import { type SyncMode, type SyncPair } from "@filen/sync/dist/types"
-import { Switch } from "../ui/switch"
-import { showConfirmDialog } from "./confirm"
+import { Switch } from "@ui/switch"
+import { showConfirmDialog } from "@dialogs/confirm"
+import {
+        isSyncPathAlreadyInConfig,
+        doesSyncNameExist
+} from "./utils"
 
-export function isSyncPathAlreadyInConfig(type: "local" | "remote", path: string): boolean {
-	const desktopConfig = getDesktopConfig()
-	const sep = type === "local" ? (window.desktopAPI.osPlatform() === "win32" ? "\\" : "/") : "/"
-	const configuredPaths =
-		type === "local"
-			? desktopConfig.syncConfig.syncPairs.map(pair => pair.localPath)
-			: desktopConfig.syncConfig.syncPairs.map(pair => pair.remotePath)
-
-	for (const configuredPath of configuredPaths) {
-		if (path.startsWith(configuredPath + sep) || configuredPath.startsWith(path + sep)) {
-			return true
-		}
-	}
-
-	return false
-}
-
-export function doesSyncNameExist(name: string): boolean {
-	const desktopConfig = getDesktopConfig()
-
-	return desktopConfig.syncConfig.syncPairs.some(pair => pair.name.trim() === name.trim())
-}
-
-export function tryingToSyncNetworkDrive(path: string): boolean {
-	const desktopConfig = getDesktopConfig()
-	const sep = window.desktopAPI.osPlatform() === "win32" ? "\\" : "/"
-
-	return path.startsWith(desktopConfig.networkDriveConfig.mountPoint + sep)
-}
+export { doesSyncNameExist } from "./utils"
 
 export const CreateSyncDialog = memo(() => {
 	const [open, setOpen] = useState<boolean>(false)

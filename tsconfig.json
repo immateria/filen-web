@@ -21,7 +21,9 @@
                         "@/*": ["./src/*"],
                         "@components/*": ["./src/components/*"],
                         "@hooks/*": ["./src/hooks/*"],
-                        "@constants": ["./src/constants.ts"]
+                        "@constants": ["./src/constants.ts"],
+                        "@ui/*": ["./src/components/ui/*"],
+                        "@dialogs/*": ["./src/components/dialogs/*"]
                 }
 	},
 	"include": ["src", "types.d.ts", "global.d.ts"],

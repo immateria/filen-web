@@ -120,7 +120,9 @@ export default defineConfig({
                         "@": path.resolve(__dirname, "./src"),
                         "@components": path.resolve(__dirname, "./src/components"),
                         "@hooks": path.resolve(__dirname, "./src/hooks"),
-                        "@constants": path.resolve(__dirname, "./src/constants.ts")
+                        "@constants": path.resolve(__dirname, "./src/constants.ts"),
+                        "@ui": path.resolve(__dirname, "./src/components/ui"),
+                        "@dialogs": path.resolve(__dirname, "./src/components/dialogs")
                 }
         },
 	worker: {
