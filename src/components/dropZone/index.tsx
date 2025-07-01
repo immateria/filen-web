@@ -9,7 +9,7 @@ import { promiseAllChunked, getCurrentParentDirectoryUUID } from "@/lib/utils"
 import useLocation from "@/hooks/useLocation"
 import useCanUpload from "@/hooks/useCanUpload"
 import useErrorToast from "@/hooks/useErrorToast"
-import { type DriveCloudItem } from "../drive"
+import { type DriveCloudItem } from "@/components/drive"
 import eventEmitter from "@/lib/eventEmitter"
 import useLoadingToast from "@/hooks/useLoadingToast"
 

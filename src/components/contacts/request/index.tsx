@@ -1,5 +1,5 @@
 import { memo, useCallback } from "react"
-import Avatar from "../../avatar"
+import Avatar from "@/components/avatar"
 import { Check, X } from "lucide-react"
 import { type ContactRequest } from "@filen/sdk/dist/types/api/v3/contacts/requests/in"
 import worker from "@/lib/worker"

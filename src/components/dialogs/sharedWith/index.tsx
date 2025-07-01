@@ -2,7 +2,7 @@ import { memo, useState, useEffect, useCallback } from "react"
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "@/components/ui/dialog"
 import eventEmitter from "@/lib/eventEmitter"
 import { useTranslation } from "react-i18next"
-import { type DriveCloudItem } from "../../drive"
+import { type DriveCloudItem } from "@/components/drive"
 import { Button } from "@/components/ui/button"
 import List from "./list"
 

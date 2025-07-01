@@ -1,5 +1,5 @@
 import { memo, useCallback, useState, useEffect } from "react"
-import { useDirectoryPublicLinkInfo, usePublicLinkURLState } from "../../../hooks/usePublicLink"
+import { useDirectoryPublicLinkInfo, usePublicLinkURLState } from "@hooks/usePublicLink"
 import Container from "../container"
 import { validate as validateUUID } from "uuid"
 import Password from "../password"
