@@ -1,5 +1,5 @@
 import { memo, useCallback, useState, useMemo, useRef } from "react"
-import { type DriveCloudItem } from "../.."
+import { type DriveCloudItem } from "@/components/drive"
 import { fileNameToSVGIcon, ColoredFolderSVGIcon } from "@/assets/fileExtensionIcons"
 import { simpleDate, formatBytes } from "@/utils"
 import ContextMenu from "./contextMenu"

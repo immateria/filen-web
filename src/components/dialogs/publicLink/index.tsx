@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useTranslation } from "react-i18next"
 import eventEmitter from "@/lib/eventEmitter"
-import { type DriveCloudItem } from "../../drive"
+import { type DriveCloudItem } from "@/components/drive"
 import { Button } from "@/components/ui/button"
 import File from "./file"
 import Directory from "./directory"

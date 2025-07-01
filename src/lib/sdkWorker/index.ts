@@ -1,7 +1,7 @@
 import { SDK_WORKER_THREADS } from "@/constants"
 import { type SDKWorker, type FilenSDKConfig } from "@filen/sdk"
 import { transfer, proxy } from "comlink"
-import eventEmitter from "../eventEmitter"
+import eventEmitter from "@/lib/eventEmitter"
 
 export type WrappedSDKWorker = SDKWorker & { terminate: () => Promise<void> }
 
