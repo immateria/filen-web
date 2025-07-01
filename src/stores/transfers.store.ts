@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { type Setter, createStoreSetter } from "./helpers"
 
 export type TransferState = "started" | "queued" | "finished" | "error" | "stopped" | "paused"
 
@@ -18,65 +19,43 @@ export type Transfer = {
 	fileType: "file" | "directory"
 }
 
-export type TransfersStore = {
-	transfers: Transfer[]
-	finishedTransfers: Transfer[]
-	speed: number
-	remaining: number
-	progress: number
-	setTransfers: (fn: Transfer[] | ((prev: Transfer[]) => Transfer[])) => void
-	setFinishedTransfers: (fn: Transfer[] | ((prev: Transfer[]) => Transfer[])) => void
-	setSpeed: (fn: number | ((prev: number) => number)) => void
-	setRemaining: (fn: number | ((prev: number) => number)) => void
-	setProgress: (fn: number | ((prev: number) => number)) => void
+export type TransfersState = {
+       transfers: Transfer[]
+       finishedTransfers: Transfer[]
+       speed: number
+       remaining: number
+       progress: number
 }
 
-export const useTransfersStore = create<TransfersStore>(set => ({
-	transfers: [
-		/*{
-			type: "upload",
-			uuid: "uuid",
-			state: "started",
-			bytes: 1,
-			name: "foo.txt",
-			size: 5,
-			startedTimestamp: 0,
-			finishedTimestamp: 0,
-			queuedTimestamp: 0,
-			errorTimestamp: 0,
-			progressTimestamp: 0
-		},
-		{
-			type: "upload",
-			uuid: "uuid2",
-			state: "started",
-			bytes: 3,
-			name: "foo.txt",
-			size: 5,
-			startedTimestamp: 0,
-			finishedTimestamp: 0,
-			queuedTimestamp: 0,
-			errorTimestamp: 0,
-			progressTimestamp: 0
-		}*/
-	],
-	finishedTransfers: [],
-	speed: 0,
-	remaining: 0,
-	progress: 0,
-	setTransfers(fn) {
-		set(state => ({ transfers: typeof fn === "function" ? fn(state.transfers) : fn }))
-	},
-	setFinishedTransfers(fn) {
-		set(state => ({ finishedTransfers: typeof fn === "function" ? fn(state.finishedTransfers) : fn }))
-	},
-	setSpeed(fn) {
-		set(state => ({ speed: typeof fn === "function" ? fn(state.speed) : fn }))
-	},
-	setRemaining(fn) {
-		set(state => ({ remaining: typeof fn === "function" ? fn(state.remaining) : fn }))
-	},
-	setProgress(fn) {
-		set(state => ({ progress: typeof fn === "function" ? fn(state.progress) : fn }))
-	}
-}))
+export type TransfersStore = TransfersState & {
+       setTransfers: Setter<Transfer[]>
+       setFinishedTransfers: Setter<Transfer[]>
+       setSpeed: Setter<number>
+       setRemaining: Setter<number>
+       setProgress: Setter<number>
+       reset: () => void
+}
+
+const initialState: TransfersState = {
+       transfers: [],
+       finishedTransfers: [],
+       speed: 0,
+       remaining: 0,
+       progress: 0
+}
+
+export const useTransfersStore = create<TransfersStore>(set => {
+       const createSetter = createStoreSetter<TransfersState>(set)
+
+       return {
+               ...initialState,
+               setTransfers: createSetter("transfers"),
+               setFinishedTransfers: createSetter("finishedTransfers"),
+               setSpeed: createSetter("speed"),
+               setRemaining: createSetter("remaining"),
+               setProgress: createSetter("progress"),
+               reset() {
+                       set({ ...initialState })
+               }
+       }
+})

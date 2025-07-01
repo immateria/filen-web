@@ -1,14 +1,28 @@
 import { create } from "zustand"
 import { type RemoteConfig } from "@/types"
+import { type Setter, createStoreSetter } from "./helpers"
 
-export type RemoteConfigStore = {
-	config: RemoteConfig | null
-	setConfig: (fn: RemoteConfig | null | ((prev: RemoteConfig | null) => RemoteConfig | null)) => void
+export type RemoteConfigState = {
+       config: RemoteConfig | null
 }
 
-export const useRemoteConfigStore = create<RemoteConfigStore>(set => ({
-	config: null,
-	setConfig(fn) {
-		set(state => ({ config: typeof fn === "function" ? fn(state.config) : fn }))
-	}
-}))
+export type RemoteConfigStore = RemoteConfigState & {
+       setConfig: Setter<RemoteConfig | null>
+       reset: () => void
+}
+
+const initialState: RemoteConfigState = {
+       config: null
+}
+
+export const useRemoteConfigStore = create<RemoteConfigStore>(set => {
+       const createSetter = createStoreSetter<RemoteConfigState>(set)
+
+       return {
+               ...initialState,
+               setConfig: createSetter("config"),
+               reset() {
+                       set({ ...initialState })
+               }
+       }
+})
