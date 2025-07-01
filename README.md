@@ -39,10 +39,13 @@ npm run build
 
 ## Drive aliases
 
-The web client now includes a basic local alias system. Using the `useDriveAliases`
-hook you can create alias categories and assign drive item UUIDs to them. Alias
-information is stored in `localStorage` and is not synchronized with the Filen
-service.
+The web client now includes a local alias system. Using the `useDriveAliases`
+hook you can create alias categories, assign drive items to them and remove
+them again. Alias information is persisted through the worker using
+`IndexedDB` so it survives reloads.
+
+From a drive item's context menu you can add or remove aliases or create new
+ones. The item information dialog lists all aliases assigned to the item.
 
 ## License
 

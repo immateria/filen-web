@@ -43,10 +43,12 @@ import {
 	PaintBucket,
 	RotateCcw,
 	Delete,
-        Copy,
-        Info,
-        Gavel,
-        Binary
+	Copy,
+	Link2,
+	Plus,
+	Info,
+	Gavel,
+	Binary
 } from "lucide-react"
 import useSuccessToast from "@/hooks/useSuccessToast"
 import { selectContacts } from "@/components/dialogs/selectContacts"
@@ -59,6 +61,7 @@ import Input from "@/components/input"
 import useIsServiceWorkerOnline from "@/hooks/useIsServiceWorkerOnline"
 import worker from "@/lib/worker"
 import useIsDesktopHTTPServerOnline from "@/hooks/useIsDesktopHTTPServerOnline"
+import useDriveAliases from "@/hooks/useDriveAliases"
 
 const iconSize = 16
 
@@ -101,6 +104,8 @@ export const ContextMenu = memo(
 		const publicLinkURLState = usePublicLinkURLState()
 		const isServiceWorkerOnline = useIsServiceWorkerOnline()
 		const isDesktopHTTPServerOnline = useIsDesktopHTTPServerOnline()
+		const { aliases: aliasMap, addAlias, addItemToAlias, removeItemFromAlias, getItemAliases, removeAlias } = useDriveAliases()
+		const itemAliases = useMemo(() => getItemAliases(item.uuid), [getItemAliases, item.uuid])
 
 		const isInsidePublicLink = useMemo(() => {
 			return location.includes("/f/") || location.includes("/d/")
@@ -375,21 +380,21 @@ export const ContextMenu = memo(
 			}
 		}, [selectedItems, setItems, loadingToast, errorToast])
 
-                const preview = useCallback(() => {
-                        if (selectedItems.length !== 1 && previewType !== "other") {
-                                return
-                        }
+		const preview = useCallback(() => {
+			if (selectedItems.length !== 1 && previewType !== "other") {
+				return
+			}
 
-                        eventEmitter.emit("openPreviewModal", { item: selectedItems[0] })
-                }, [selectedItems, previewType])
+			eventEmitter.emit("openPreviewModal", { item: selectedItems[0] })
+		}, [selectedItems, previewType])
 
-                const hexView = useCallback(() => {
-                        if (selectedItems.length !== 1) {
-                                return
-                        }
+		const hexView = useCallback(() => {
+			if (selectedItems.length !== 1) {
+				return
+			}
 
-                        eventEmitter.emit("openHexModal", { item: selectedItems[0] })
-                }, [selectedItems])
+			eventEmitter.emit("openHexModal", { item: selectedItems[0] })
+		}, [selectedItems])
 
 		const rename = useCallback(async () => {
 			const item = selectedItems[0]
@@ -597,6 +602,45 @@ export const ContextMenu = memo(
 			}
 		}, [item.uuid, successToast, errorToast, t])
 
+               const createAlias = useCallback(async () => {
+                       const inputResponse = await showInputDialog({
+				title: t("drive.dialogs.aliases.create.title"),
+				continueButtonText: t("drive.dialogs.aliases.create.continue"),
+				placeholder: t("drive.dialogs.aliases.create.placeholder"),
+				value: "",
+				autoFocusInput: true,
+				continueButtonVariant: "default",
+				minLength: 0,
+				maxLength: 255
+			})
+
+			if (inputResponse.cancelled) {
+				return
+			}
+
+			const name = inputResponse.value.trim()
+
+			if (!name) {
+				return
+			}
+
+                       addAlias(name)
+                       addItemToAlias(name, item.uuid)
+               }, [addAlias, addItemToAlias, item.uuid, t])
+
+               const openAliasLocation = useCallback(() => {
+                       if (driveURLState.trash || driveURLState.publicLink) {
+                               return
+                       }
+
+                       navigate({
+                               to: "/drive/$",
+                               params: {
+                                       _splat: `${location.split("/drive/").join("")}/${item.parent}`
+                               }
+                       })
+               }, [navigate, location, item.parent, driveURLState.trash, driveURLState.publicLink])
+
 		const keyDownListener = useCallback(
 			(e: KeyboardEvent) => {
 				if (e.key === "s" && (e.ctrlKey || e.metaKey) && selectedItems.length > 0) {
@@ -708,36 +752,36 @@ export const ContextMenu = memo(
 					? MAX_PREVIEW_SIZE_SW
 					: MAX_PREVIEW_SIZE_WEB
 
-                        if (
-                                selectedItems.length === 1 &&
-                                item.type === "file" &&
-                                previewType !== "other" &&
-                                maxPreviewSize >= item.size &&
-                                !selectedItemsContainUndecryptableItems
-                        ) {
+			if (
+				selectedItems.length === 1 &&
+				item.type === "file" &&
+				previewType !== "other" &&
+				maxPreviewSize >= item.size &&
+				!selectedItemsContainUndecryptableItems
+			) {
 				if (!groups["download"]) {
 					groups["download"] = []
 				}
 
-                                groups["download"].push(
-                                        <ContextMenuItem
-                                                onClick={preview}
-                                                className="cursor-pointer gap-3"
-                                        >
-                                                <Eye size={iconSize} />
-                                                {t("contextMenus.item.preview")}
-                                        </ContextMenuItem>
-                                )
-                                groups["download"].push(
-                                        <ContextMenuItem
-                                                onClick={hexView}
-                                                className="cursor-pointer gap-3"
-                                        >
-                                                <Binary size={iconSize} />
-                                                {t("contextMenus.item.hexView")}
-                                        </ContextMenuItem>
-                                )
-                        }
+				groups["download"].push(
+					<ContextMenuItem
+						onClick={preview}
+						className="cursor-pointer gap-3"
+					>
+						<Eye size={iconSize} />
+						{t("contextMenus.item.preview")}
+					</ContextMenuItem>
+				)
+				groups["download"].push(
+					<ContextMenuItem
+						onClick={hexView}
+						className="cursor-pointer gap-3"
+					>
+						<Binary size={iconSize} />
+						{t("contextMenus.item.hexView")}
+					</ContextMenuItem>
+				)
+			}
 
 			if (selectedItems.length === 1 && item.type === "directory" && !driveURLState.trash) {
 				if (!groups["open"]) {
@@ -1021,6 +1065,83 @@ export const ContextMenu = memo(
 				)
 			}
 
+			if (selectedItems.length === 1 && !driveURLState.publicLink && !driveURLState.trash && !driveURLState.sharedIn) {
+				if (!groups["aliases"]) {
+					groups["aliases"] = []
+				}
+
+				groups["aliases"].push(
+					<ContextMenuSub>
+						<ContextMenuSubTrigger
+							className="cursor-pointer gap-3"
+							onClick={e => e.stopPropagation()}
+						>
+							<Link2 size={iconSize} />
+							{t("contextMenus.item.aliases.add")}
+						</ContextMenuSubTrigger>
+						<ContextMenuSubContent>
+							{Object.keys(aliasMap).map(name => (
+								<ContextMenuItem
+									key={name}
+									onClick={() => addItemToAlias(name, item.uuid)}
+									className="cursor-pointer"
+								>
+									{name}
+								</ContextMenuItem>
+							))}
+							<ContextMenuSeparator />
+							<ContextMenuItem
+								onClick={createAlias}
+								className="cursor-pointer gap-3"
+							>
+								<Plus size={iconSize} />
+								{t("contextMenus.item.aliases.create")}
+							</ContextMenuItem>
+						</ContextMenuSubContent>
+					</ContextMenuSub>
+				)
+
+                                if (itemAliases.length > 0) {
+                                        groups["aliases"].push(
+                                                <ContextMenuItem
+                                                        onClick={openAliasLocation}
+                                                        className="cursor-pointer gap-3"
+                                                >
+                                                        <Navigation size={iconSize} />
+                                                        {t("contextMenus.item.aliases.follow")}
+                                                </ContextMenuItem>
+                                        )
+
+                                        groups["aliases"].push(
+                                                <ContextMenuSub>
+                                                        <ContextMenuSubTrigger
+                                                                className="cursor-pointer gap-3"
+                                                                onClick={e => e.stopPropagation()}
+                                                        >
+                                                                <Trash size={iconSize} />
+                                                                {t("contextMenus.item.aliases.remove")}
+                                                        </ContextMenuSubTrigger>
+                                                        <ContextMenuSubContent>
+                                                                {itemAliases.map(alias => (
+                                                                        <ContextMenuItem
+                                                                                key={alias}
+                                                                                onClick={() => {
+                                                                                        removeItemFromAlias(alias, item.uuid)
+                                                                                        if ((aliasMap[alias]?.length ?? 1) <= 1) {
+                                                                                                removeAlias(alias)
+                                                                                        }
+                                                                                }}
+                                                                                className="cursor-pointer"
+                                                                        >
+                                                                                {alias}
+                                                                        </ContextMenuItem>
+                                                                ))}
+                                                        </ContextMenuSubContent>
+                                                </ContextMenuSub>
+                                        )
+                                }
+			}
+
 			if (driveURLState.trash && !driveURLState.publicLink && !selectedItemsContainUndecryptableItems) {
 				if (!groups["trash"]) {
 					groups["trash"] = []
@@ -1083,9 +1204,9 @@ export const ContextMenu = memo(
 			})
 		}, [
 			selectedItems.length,
-                        preview,
-                        hexView,
-                        t,
+			preview,
+			hexView,
+			t,
 			selectedItemsContainUndecryptableItems,
 			previewType,
 			openDirectory,
@@ -1112,7 +1233,14 @@ export const ContextMenu = memo(
 			trash,
 			isServiceWorkerOnline,
 			item,
-			manageShareOut,
+			createAlias,
+			addItemToAlias,
+                        removeItemFromAlias,
+                        itemAliases,
+                        aliasMap,
+                       openAliasLocation,
+                        removeAlias,
+                        manageShareOut,
 			removeShared,
 			isDesktopHTTPServerOnline,
 			directoryPublicLinkDownloadBtn,

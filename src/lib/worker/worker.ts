@@ -38,6 +38,7 @@ import { type Contact } from "@filen/sdk/dist/types/api/v3/contacts"
 import { type ContactRequest } from "@filen/sdk/dist/types/api/v3/contacts/requests/in"
 import { type BlockedContact } from "@filen/sdk/dist/types/api/v3/contacts/blocked"
 import { type UserAccountResponse } from "@filen/sdk/dist/types/api/v3/user/account"
+import { type DriveAliasMap } from "@/stores/aliases.store"
 import axios, { type AxiosResponse } from "axios"
 import { workerCorsHeadCache, workerParseOGFromURLCache, clearThumbnailCache, calculateThumbnailCacheUsage } from "@/cache"
 import { Semaphore } from "@/lib/semaphore"
@@ -1651,7 +1652,7 @@ export async function restoreItems({ items }: { items: DriveCloudItem[] }): Prom
 }
 
 export async function favoriteItems({ items, favorite }: { items: DriveCloudItem[]; favorite: boolean }): Promise<void> {
-	await waitForInitialization()
+        await waitForInitialization()
 
 	await promiseAllChunked(
 		items.map(item =>
@@ -1666,8 +1667,69 @@ export async function favoriteItems({ items, favorite }: { items: DriveCloudItem
 							uuid: item.uuid,
 							favorite
 						})
-		)
-	)
+                )
+        )
+}
+
+export async function listDriveAliases(): Promise<DriveAliasMap> {
+       await waitForInitialization()
+
+       return (await getItem<DriveAliasMap>("driveAliases")) ?? {}
+}
+
+export async function createDriveAlias({ name }: { name: string }): Promise<void> {
+       await waitForInitialization()
+
+       const aliases = await listDriveAliases()
+
+       if (name in aliases) {
+               return
+       }
+
+       aliases[name] = []
+
+       await setItem("driveAliases", aliases)
+}
+
+export async function deleteDriveAlias({ name }: { name: string }): Promise<void> {
+       await waitForInitialization()
+
+       const aliases = await listDriveAliases()
+
+       if (!(name in aliases)) {
+               return
+       }
+
+       delete aliases[name]
+
+       await setItem("driveAliases", aliases)
+}
+
+export async function addDriveItemToAlias({ alias, uuid }: { alias: string; uuid: string }): Promise<void> {
+       await waitForInitialization()
+
+       const aliases = await listDriveAliases()
+       const items = aliases[alias] ?? []
+
+       if (!items.includes(uuid)) {
+               aliases[alias] = [...items, uuid]
+               await setItem("driveAliases", aliases)
+       }
+}
+
+export async function removeDriveItemFromAlias({ alias, uuid }: { alias: string; uuid: string }): Promise<void> {
+       await waitForInitialization()
+
+       const aliases = await listDriveAliases()
+       const items = aliases[alias]
+
+       if (!items) {
+               return
+       }
+
+       aliases[alias] = items.filter(id => id !== uuid)
+
+       await setItem("driveAliases", aliases)
 }
 
 export async function readFile({

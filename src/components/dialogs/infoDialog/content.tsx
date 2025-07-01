@@ -16,6 +16,7 @@ import pathModule from "path"
 import { type DirectorySizeResult } from "@/lib/worker/worker"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { TOOLTIP_POPUP_DELAY } from "@/constants"
+import useDriveAliases from "@/hooks/useDriveAliases"
 
 export const Content = memo(({ item }: { item: DriveCloudItem }) => {
 	const [size, setSize] = useState<number>(item.size)
@@ -36,6 +37,8 @@ export const Content = memo(({ item }: { item: DriveCloudItem }) => {
 	)
 	const publicLinkURLState = usePublicLinkURLState()
 	const { baseFolderUUID } = useSDKConfig()
+	const { getItemAliases } = useDriveAliases()
+	const aliasesForItem = useMemo(() => getItemAliases(item.uuid), [getItemAliases, item.uuid])
 	const [dirSize, setDirSize] = useState<DirectorySizeResult>(
 		directorySizeCache.has(item.uuid) ? directorySizeCache.get(item.uuid)! : { size: 0, folders: 0, files: 0 }
 	)
@@ -170,6 +173,14 @@ export const Content = memo(({ item }: { item: DriveCloudItem }) => {
 					<p className="line-clamp-1 text-ellipsis break-all">{simpleDate(item.timestamp)}</p>
 				</div>
 			</div>
+			{aliasesForItem.length > 0 && (
+				<div className="flex flex-row items-center gap-3">
+					<div className="flex flex-col gap-0.5 w-full">
+						<p className="line-clamp-1 text-ellipsis break-all text-muted-foreground">{t("dialogs.info.aliases")}</p>
+						<p className="line-clamp-1 text-ellipsis break-all">{aliasesForItem.join(", ")}</p>
+					</div>
+				</div>
+			)}
 		</div>
 	)
 })

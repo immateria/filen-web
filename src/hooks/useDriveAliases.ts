@@ -1,39 +1,91 @@
-import { useLocalStorage } from "@uidotdev/usehooks"
-import { useCallback } from "react"
-
-export type DriveAliasMap = Record<string, string[]>
+import { useCallback, useEffect } from "react"
+import { useAliasesStore } from "@/stores/aliases.store"
+import worker from "@/lib/worker"
 
 export default function useDriveAliases() {
-        const [aliases, setAliases] = useLocalStorage<DriveAliasMap>("driveAliases", {})
+       const { aliases, setAliases, addAlias, removeAlias, addItemToAlias, removeItemFromAlias, getItemAliases } = useAliasesStore(state => ({
+               aliases: state.aliases,
+               setAliases: state.setAliases,
+               addAlias: state.addAlias,
+               removeAlias: state.removeAlias,
+               addItemToAlias: state.addItemToAlias,
+               removeItemFromAlias: state.removeItemFromAlias,
+               getItemAliases: state.getItemAliases
+       }))
 
-        const addAlias = useCallback((name: string) => {
-                setAliases(prev => ({
-                        ...prev,
-                        [name]: prev[name] ?? []
-                }))
-        }, [setAliases])
+       useEffect(() => {
+               worker
+                       .listDriveAliases()
+                       .then(result => setAliases(result))
+                       .catch(console.error)
+       }, [setAliases])
 
-        const removeAlias = useCallback((name: string) => {
-                setAliases(prev => {
-                        const copy = { ...prev }
-                        delete copy[name]
-                        return copy
-                })
-        }, [setAliases])
+       const validatedAddAlias = useCallback(
+               async (name: string) => {
+                       const trimmed = name.trim()
 
-        const addItemToAlias = useCallback((alias: string, uuid: string) => {
-                setAliases(prev => ({
-                        ...prev,
-                        [alias]: Array.from(new Set([...(prev[alias] ?? []), uuid]))
-                }))
-        }, [setAliases])
+                       if (!trimmed || trimmed in aliases) {
+                               return
+                       }
 
-        const removeItemFromAlias = useCallback((alias: string, uuid: string) => {
-                setAliases(prev => ({
-                        ...prev,
-                        [alias]: (prev[alias] ?? []).filter(id => id !== uuid)
-                }))
-        }, [setAliases])
+                       await worker.createDriveAlias({ name: trimmed })
+                       addAlias(trimmed)
+               },
+               [aliases, addAlias]
+       )
 
-        return { aliases, addAlias, removeAlias, addItemToAlias, removeItemFromAlias }
+       const validatedRemoveAlias = useCallback(
+               async (name: string) => {
+                       if (!(name in aliases)) {
+                               return
+                       }
+
+                       await worker.deleteDriveAlias({ name })
+                       removeAlias(name)
+               },
+               [aliases, removeAlias]
+       )
+
+       const validatedAddItemToAlias = useCallback(
+               async (alias: string, uuid: string) => {
+                       const trimmedAlias = alias.trim()
+
+                       if (!trimmedAlias || !uuid || !(trimmedAlias in aliases)) {
+                               return
+                       }
+
+			const items = aliases[trimmedAlias]
+
+			if (items && items.includes(uuid)) {
+				return
+			}
+
+                       await worker.addDriveItemToAlias({ alias: trimmedAlias, uuid })
+                       addItemToAlias(trimmedAlias, uuid)
+               },
+               [aliases, addItemToAlias]
+       )
+
+       const validatedRemoveItemFromAlias = useCallback(
+               async (alias: string, uuid: string) => {
+                       const items = aliases[alias]
+
+                       if (!items || !items.includes(uuid)) {
+                               return
+                       }
+
+                       await worker.removeDriveItemFromAlias({ alias, uuid })
+                       removeItemFromAlias(alias, uuid)
+               },
+               [aliases, removeItemFromAlias]
+       )
+
+	return {
+		aliases,
+		addAlias: validatedAddAlias,
+		removeAlias: validatedRemoveAlias,
+		addItemToAlias: validatedAddItemToAlias,
+		removeItemFromAlias: validatedRemoveItemFromAlias,
+		getItemAliases
+	}
 }
