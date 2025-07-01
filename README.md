@@ -37,6 +37,13 @@ npm run dev
 npm run build
 ```
 
+## Drive aliases
+
+The web client now includes a basic local alias system. Using the `useDriveAliases`
+hook you can create alias categories and assign drive item UUIDs to them. Alias
+information is stored in `localStorage` and is not synchronized with the Filen
+service.
+
 ## License
 
 Distributed under the AGPL-3.0 License. See [LICENSE](https://github.com/FilenCloudDienste/filen-s3/blob/main/LICENSE.md) for more information.
