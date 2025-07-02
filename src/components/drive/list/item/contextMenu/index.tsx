@@ -693,9 +693,13 @@ export const ContextMenu = memo(
 			[setItems, item.uuid]
 		)
 
-		const info = useCallback(() => {
-			eventEmitter.emit("openInfoDialog", item)
-		}, [item])
+                const info = useCallback(() => {
+                        eventEmitter.emit("openInfoDialog", item)
+                }, [item])
+
+                const metadata = useCallback(() => {
+                        eventEmitter.emit("openMetadataDialog", { uuid: item.uuid, name: item.name })
+                }, [item.uuid, item.name])
 
 		const manageShareOut = useCallback(() => {
 			if (isInsidePublicLink) {
@@ -933,16 +937,25 @@ export const ContextMenu = memo(
 					groups["favoriteInfoColor"] = []
 				}
 
-				groups["favoriteInfoColor"].push(
-					<ContextMenuItem
-						onClick={info}
-						className="cursor-pointer gap-3"
-					>
-						<Info size={iconSize} />
-						{t("contextMenus.item.info")}
-					</ContextMenuItem>
-				)
-			}
+                                groups["favoriteInfoColor"].push(
+                                        <ContextMenuItem
+                                                onClick={info}
+                                                className="cursor-pointer gap-3"
+                                        >
+                                                <Info size={iconSize} />
+                                                {t("contextMenus.item.info")}
+                                        </ContextMenuItem>
+                                )
+                                groups["favoriteInfoColor"].push(
+                                        <ContextMenuItem
+                                                onClick={metadata}
+                                                className="cursor-pointer gap-3"
+                                        >
+                                                <Binary size={iconSize} />
+                                                {t("contextMenus.item.metadata")}
+                                        </ContextMenuItem>
+                                )
+                        }
 
 			if (
 				!driveURLState.sharedIn &&
@@ -1235,6 +1248,7 @@ export const ContextMenu = memo(
                         removeItemFromAlias,
                         itemAliases,
                         aliasMap,
+                        metadata,
                        openAliasLocation,
                         manageShareOut,
 			removeShared,
