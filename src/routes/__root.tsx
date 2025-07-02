@@ -27,6 +27,7 @@ import {
        InfoDialog,
        IsOnlineDialog,
        DesktopUpdateDialog,
+       MetadataDialog,
        StorageDialog,
        MaintenanceDialog,
        LockDialog
@@ -222,8 +223,9 @@ export const Root = memo(() => {
 										<CreateSyncDialog />
 										<NotificationHandler />
 										<ActivityHandler />
-										<InfoDialog />
-										<StorageDialog />
+                                                                               <InfoDialog />
+                                                                               <MetadataDialog />
+                                                                               <StorageDialog />
 										<ExportReminder />
 										{IS_DESKTOP && (
 											<>
