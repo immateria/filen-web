@@ -492,13 +492,32 @@
 			"continue": "Export",
 			"dismiss": "Dismiss"
 		},
-		"pdfPassword": {
-			"title": "Password",
-			"continue": "Unlock",
-			"placeholder": "Password"
-		}
-	},
-	"contextMenus": {
+                "pdfPassword": {
+                        "title": "Password",
+                        "continue": "Unlock",
+                        "placeholder": "Password"
+                },
+                "metadata": {
+                        "title": "Metadata",
+                        "key": "Key",
+                        "value": "Value",
+                        "type": "Type",
+                        "types": {
+                                "string": "Text",
+                                "integer": "Integer",
+                                "number": "Number",
+                                "boolean": "Boolean",
+                                "date": "Date",
+                                "datetime": "Datetime"
+                        },
+                        "add": "Add",
+                        "remove": "Remove",
+                        "invalidKey": "Invalid key name",
+                        "invalidValue": "Invalid value"
+                        "duplicateKey": "Key already exists"
+                }
+        },
+        "contextMenus": {
 		"item": {
 			"download": "Download",
 			"publicLink": "Public link",
@@ -522,8 +541,9 @@
 			"color": "Color",
 			"deletePermanently": "Delete permanently",
 			"copyId": "Copy ID",
-			"info": "Info",
-			"manageShareOut": "Manage share",
+                        "info": "Info",
+                        "metadata": "Metadata",
+                        "manageShareOut": "Manage share",
 			"manageShareIn": "Remove share",
 			"aliases": {
                                 "add": "Add to alias",
