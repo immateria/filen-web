@@ -63,6 +63,7 @@ import { type SDKWorkerToMainWorkerMessage } from "@/lib/sdkWorker/sdkWorker"
 
 const parseOGFromURLMutex = new Semaphore(1)
 const corsHeadMutex = new Semaphore(1)
+const aliasMutex = new Semaphore(1)
 let isInitialized = false
 const pauseSignals: Record<string, PauseSignal> = {}
 const abortControllers: Record<string, AbortController> = {}
@@ -1680,56 +1681,80 @@ export async function listDriveAliases(): Promise<DriveAliasMap> {
 export async function createDriveAlias({ name }: { name: string }): Promise<void> {
        await waitForInitialization()
 
-       const aliases = await listDriveAliases()
+       await aliasMutex.acquire()
 
-       if (name in aliases) {
-               return
+       try {
+               const aliases = await listDriveAliases()
+
+               if (name in aliases) {
+                       return
+               }
+
+               aliases[name] = []
+
+               await setItem("driveAliases", aliases)
+       } finally {
+               aliasMutex.release()
        }
-
-       aliases[name] = []
-
-       await setItem("driveAliases", aliases)
 }
 
 export async function deleteDriveAlias({ name }: { name: string }): Promise<void> {
        await waitForInitialization()
 
-       const aliases = await listDriveAliases()
+       await aliasMutex.acquire()
 
-       if (!(name in aliases)) {
-               return
+       try {
+               const aliases = await listDriveAliases()
+
+               if (!(name in aliases)) {
+                       return
+               }
+
+               delete aliases[name]
+
+               await setItem("driveAliases", aliases)
+       } finally {
+               aliasMutex.release()
        }
-
-       delete aliases[name]
-
-       await setItem("driveAliases", aliases)
 }
 
 export async function addDriveItemToAlias({ alias, uuid }: { alias: string; uuid: string }): Promise<void> {
        await waitForInitialization()
 
-       const aliases = await listDriveAliases()
-       const items = aliases[alias] ?? []
+       await aliasMutex.acquire()
 
-       if (!items.includes(uuid)) {
-               aliases[alias] = [...items, uuid]
-               await setItem("driveAliases", aliases)
+       try {
+               const aliases = await listDriveAliases()
+               const items = aliases[alias] ?? []
+
+               if (!items.includes(uuid)) {
+                       aliases[alias] = [...items, uuid]
+                       await setItem("driveAliases", aliases)
+               }
+       } finally {
+               aliasMutex.release()
        }
 }
 
 export async function removeDriveItemFromAlias({ alias, uuid }: { alias: string; uuid: string }): Promise<void> {
        await waitForInitialization()
 
-       const aliases = await listDriveAliases()
-       const items = aliases[alias]
+       await aliasMutex.acquire()
 
-       if (!items) {
-               return
+       try {
+               const aliases = await listDriveAliases()
+               const items = aliases[alias]
+
+               if (!items) {
+                       return
+               }
+
+               aliases[alias] = items.filter(id => id !== uuid)
+
+               await setItem("driveAliases", aliases)
+       } finally {
+               aliasMutex.release()
        }
-
-       aliases[alias] = items.filter(id => id !== uuid)
-
-       await setItem("driveAliases", aliases)
 }
 
 export async function readFile({

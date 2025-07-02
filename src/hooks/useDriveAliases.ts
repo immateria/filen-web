@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from "react"
 import { useAliasesStore } from "@/stores/aliases.store"
 import worker from "@/lib/worker"
+import useErrorToast from "@/hooks/useErrorToast"
 
 export default function useDriveAliases() {
        const { aliases, setAliases, addAlias, removeAlias, addItemToAlias, removeItemFromAlias, getItemAliases } = useAliasesStore(state => ({
@@ -12,13 +13,17 @@ export default function useDriveAliases() {
                removeItemFromAlias: state.removeItemFromAlias,
                getItemAliases: state.getItemAliases
        }))
+       const errorToast = useErrorToast()
 
        useEffect(() => {
                worker
                        .listDriveAliases()
                        .then(result => setAliases(result))
-                       .catch(console.error)
-       }, [setAliases])
+                       .catch(e => {
+                               console.error(e)
+                               errorToast((e as unknown as Error).message ?? (e as unknown as Error).toString())
+                       })
+       }, [setAliases, errorToast])
 
        const validatedAddAlias = useCallback(
                async (name: string) => {
@@ -28,10 +33,15 @@ export default function useDriveAliases() {
                                return
                        }
 
-                       await worker.createDriveAlias({ name: trimmed })
-                       addAlias(trimmed)
+                       try {
+                               await worker.createDriveAlias({ name: trimmed })
+                               addAlias(trimmed)
+                       } catch (e) {
+                               console.error(e)
+                               errorToast((e as unknown as Error).message ?? (e as unknown as Error).toString())
+                       }
                },
-               [aliases, addAlias]
+               [aliases, addAlias, errorToast]
        )
 
        const validatedRemoveAlias = useCallback(
@@ -40,10 +50,15 @@ export default function useDriveAliases() {
                                return
                        }
 
-                       await worker.deleteDriveAlias({ name })
-                       removeAlias(name)
+                       try {
+                               await worker.deleteDriveAlias({ name })
+                               removeAlias(name)
+                       } catch (e) {
+                               console.error(e)
+                               errorToast((e as unknown as Error).message ?? (e as unknown as Error).toString())
+                       }
                },
-               [aliases, removeAlias]
+               [aliases, removeAlias, errorToast]
        )
 
        const validatedAddItemToAlias = useCallback(
@@ -60,10 +75,15 @@ export default function useDriveAliases() {
 				return
 			}
 
-                       await worker.addDriveItemToAlias({ alias: trimmedAlias, uuid })
-                       addItemToAlias(trimmedAlias, uuid)
+                       try {
+                               await worker.addDriveItemToAlias({ alias: trimmedAlias, uuid })
+                               addItemToAlias(trimmedAlias, uuid)
+                       } catch (e) {
+                               console.error(e)
+                               errorToast((e as unknown as Error).message ?? (e as unknown as Error).toString())
+                       }
                },
-               [aliases, addItemToAlias]
+               [aliases, addItemToAlias, errorToast]
        )
 
        const validatedRemoveItemFromAlias = useCallback(
@@ -74,10 +94,21 @@ export default function useDriveAliases() {
                                return
                        }
 
-                       await worker.removeDriveItemFromAlias({ alias, uuid })
-                       removeItemFromAlias(alias, uuid)
+                       try {
+                               await worker.removeDriveItemFromAlias({ alias, uuid })
+                               removeItemFromAlias(alias, uuid)
+
+                               const updatedItems = useAliasesStore.getState().aliases[alias]
+
+                               if (!updatedItems || updatedItems.length === 0) {
+                                       removeAlias(alias)
+                               }
+                       } catch (e) {
+                               console.error(e)
+                               errorToast((e as unknown as Error).message ?? (e as unknown as Error).toString())
+                       }
                },
-               [aliases, removeItemFromAlias]
+               [aliases, removeItemFromAlias, removeAlias, errorToast]
        )
 
 	return {
