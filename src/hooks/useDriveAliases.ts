@@ -94,13 +94,13 @@ export default function useDriveAliases() {
                                return
                        }
 
-                       const remaining = items.length - 1
-
                        try {
                                await worker.removeDriveItemFromAlias({ alias, uuid })
                                removeItemFromAlias(alias, uuid)
 
-                               if (remaining <= 0) {
+                               const updatedItems = useAliasesStore.getState().aliases[alias]
+
+                               if (!updatedItems || updatedItems.length === 0) {
                                        removeAlias(alias)
                                }
                        } catch (e) {
